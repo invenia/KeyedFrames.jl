@@ -51,7 +51,9 @@ using Base.Test
         @test hash(kf1) != hash(KeyedFrame(cpd, [:b, :a]))
 
         @test kf1 == df1
+        @test df1 == kf1
         @test !isequal(kf1, df1)
+        @test !isequal(df1, kf1)
         @test hash(kf1) != hash(df1)
 
         @test kf1 != KeyedFrame(cpd, [:a, :b, :c])
@@ -102,6 +104,9 @@ using Base.Test
 
         @test isequal(kf1[1:2], KeyedFrame(DataFrame(; a=1:10, b=2:11), [:a, :b]))
         @test isequal(kf1[[:a, :b]], KeyedFrame(DataFrame(; a=1:10, b=2:11), [:a, :b]))
+
+        @test isequal(kf1[1, [:a, :b]], KeyedFrame(DataFrame(; a=1, b=2), [:a, :b]))
+        @test isequal(kf1[8:10, 1:2], KeyedFrame(DataFrame(; a=8:10, b=9:11), [:a, :b]))
 
         @test isequal(kf1[:, 1:2], KeyedFrame(DataFrame(; a=1:10, b=2:11), [:a, :b]))
         @test isequal(kf1[:, [:a, :b]], KeyedFrame(DataFrame(; a=1:10, b=2:11), [:a, :b]))
