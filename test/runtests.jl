@@ -239,6 +239,9 @@ using Base.Test
     @testset "unique" begin
         kf4 = KeyedFrame(DataFrame(; a=[1, 2, 3, 1, 2], b=[1, 2, 3, 4, 2], c=1:5), [:a, :b])
 
+        @test nonunique(kf4) == [false, false, false, false, true]
+        @test nonunique(kf4, :a) == [false, false, false, true, true]
+
         # Use default columns (key)
         expected = KeyedFrame(DataFrame(; a=[1, 2, 3, 1], b=1:4, c=1:4), [:a, :b])
         @test isequal(unique(kf4), expected)

@@ -2,7 +2,8 @@ __precompile__()
 module KeyedFrames
 
 using DataFrames
-import DataFrames: SubDataFrame, nrow, ncol, index, deleterows!, unique!, head, tail
+import DataFrames: SubDataFrame, nrow, ncol, index, deleterows!, unique!, nonunique, head,
+       tail
 
 struct KeyedFrame <: AbstractDataFrame
     frame::DataFrame
@@ -30,7 +31,7 @@ end
 KeyedFrame(df::DataFrame, key::Symbol) = KeyedFrame(df, [key])
 
 """
-    KeyedFrame(df::DataFrame, key::Vector)
+    KeyedFrame(df::DataFrame, key::Vector{Symbol})
 
 Create an `KeyedFrame` using the provided `DataFrame`; `key` specifies the columns
 to use by default when performing a `join` on `KeyedFrame`s when `on` is not provided.
@@ -154,6 +155,8 @@ function unique!(kf::KeyedFrame, cols=nothing)
     unique!(kf.frame, cols === nothing ? kf.key : cols)
     return kf
 end
+
+nonunique(kf::KeyedFrame) = nonunique(kf.frame, kf.key)
 
 ##### JOIN #####
 
