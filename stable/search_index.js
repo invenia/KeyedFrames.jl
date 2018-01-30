@@ -13,7 +13,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Home",
     "title": "KeyedFrames",
     "category": "section",
-    "text": "A KeyedFrame is a DataFrame that also stores a vector of column names that together act as a unique key.When a KeyedFrame is joined with another KeyedFrame (or any other AbstractDataFrame), the key can be used to determine which columns to join on. When a KeyedFrame is sorted, it will sort by the key columns first by default."
+    "text": "A KeyedFrame is a DataFrame that also stores a vector of column names that together act as a unique key.This key is used to provide default column information to join, unique, and sort when this information is not provided by the user."
 },
 
 {
