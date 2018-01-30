@@ -99,6 +99,54 @@ Notice that `:d` is no longer a key (as it has been renamed `:c`). It's importan
 that while the user may expect `:c` to be part of the new frame's key (as `:d` was), `join`
 does not infer this.
 
+## Deduplication
+
+When calling `unique` (or `unique!`) on a KeyedFrame without providing a `cols` argument,
+`cols` will default to the `key` of the `KeyedFrame` instead of all columns. If you wish to
+remove only rows that are duplicates across all columns (rather than just across the key),
+you can call `unique!(kf, names(kf))`.
+
+### Example
+
+```julia
+julia> kf3 = KeyedFrame(DataFrame(; a=[1, 2, 3, 2, 1], b=[1, 2, 3, 2, 5], c=1:5), [:a, :b])
+5×3 KeyedFrames.KeyedFrame
+│ Row │ a │ b │ c │
+├─────┼───┼───┼───┤
+│ 1   │ 1 │ 1 │ 1 │
+│ 2   │ 2 │ 2 │ 2 │
+│ 3   │ 3 │ 3 │ 3 │
+│ 4   │ 2 │ 2 │ 4 │
+│ 5   │ 1 │ 5 │ 5 │
+
+julia> unique(kf3)
+4×3 KeyedFrames.KeyedFrame
+│ Row │ a │ b │ c │
+├─────┼───┼───┼───┤
+│ 1   │ 1 │ 1 │ 1 │
+│ 2   │ 2 │ 2 │ 2 │
+│ 3   │ 3 │ 3 │ 3 │
+│ 4   │ 1 │ 5 │ 5 │
+
+julia> unique(kf3, :a)
+3×3 KeyedFrames.KeyedFrame
+│ Row │ a │ b │ c │
+├─────┼───┼───┼───┤
+│ 1   │ 1 │ 1 │ 1 │
+│ 2   │ 2 │ 2 │ 2 │
+│ 3   │ 3 │ 3 │ 3 │
+
+julia> unique(kf3, names(kf2))
+5×3 KeyedFrames.KeyedFrame
+│ Row │ a │ b │ c │
+├─────┼───┼───┼───┤
+│ 1   │ 1 │ 1 │ 1 │
+│ 2   │ 2 │ 2 │ 2 │
+│ 3   │ 3 │ 3 │ 3 │
+│ 4   │ 2 │ 2 │ 4 │
+│ 5   │ 1 │ 5 │ 5 │
+```
+
 ## Sorting
 
 When `sort`ing, if no `cols` keyword is supplied, the `key` is used to determine precedence.
@@ -128,10 +176,11 @@ julia> sort(kf2)
 
 ## Equality
 
-A `KeyedFrame` and a `DataFrame` with identical data are considered equal (`==` returns
-`true`, though `isequal` will be false).
+Two `KeyedFrame`s are considered equal to (`==`) each other if their data are equal and they
+have the same `key`. (The order in which columns appear in the `key` is ignored for the
+purposes of `==`, but is relevant when calling `isequal`. This means that it is possible to
+have two `KeyedFrame`s that are considered equal but whose default sort order will be
+different by virtue of having `key`s with different column ordering.)
 
-When testing for equality with `==`, `key` ordering is ignored, which means that it's
-possible to have two `KeyedFrame`s that are considered equal but whose default sort order
-will be different by virtue of having the columns listed in a different order in their
-`key`s.
+A `KeyedFrame` and a `DataFrame` with identical data are also considered equal (`==` returns
+`true`, though `isequal` will be false).

@@ -2,7 +2,7 @@ __precompile__()
 module KeyedFrames
 
 using DataFrames
-import DataFrames: SubDataFrame, nrow, ncol, index, deleterows!, head, tail
+import DataFrames: SubDataFrame, nrow, ncol, index, deleterows!, unique!, head, tail
 
 struct KeyedFrame <: AbstractDataFrame
     frame::DataFrame
@@ -39,6 +39,11 @@ When performing a `join`, if only one of the arguments is an `KeyedFrame` and `o
 specified, the frames will be joined on the `key` of the `KeyedFrame`. If both
 arguments are `KeyedFrame`s, `on` will default to the intersection of their respective
 indices. In all cases, the result of the `join` will share a type with the first argument.
+
+When calling `unique` (or `unique!`) on a KeyedFrame without providing a `cols` argument,
+`cols` will default to the `key` of the `KeyedFrame` instead of all columns. If you wish to
+remove only rows that are duplicates across all columns (rather than just across the key),
+you can call `unique!(kf, names(kf))`.
 
 When `sort`ing, if no `cols` keyword is supplied, the `key` is used to determine precedence.
 
@@ -138,6 +143,17 @@ end
 Base.push!(kf::KeyedFrame, data) = push!(kf.frame, data)
 Base.append!(kf::KeyedFrame, data) = append!(kf.frame, data)
 deleterows!(kf::KeyedFrame, ind) = deleterows!(kf.frame, ind)
+
+##### UNIQUE #####
+
+function Base.unique(kf::KeyedFrame, cols=nothing)
+    return KeyedFrame(unique(kf.frame, cols === nothing ? kf.key : cols), kf.key)
+end
+
+function unique!(kf::KeyedFrame, cols=nothing)
+    unique!(kf.frame, cols === nothing ? kf.key : cols)
+    return kf
+end
 
 ##### JOIN #####
 

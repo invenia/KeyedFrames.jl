@@ -1,13 +1,13 @@
-using Documenter, KeyedFrame
+using Documenter, KeyedFrames
 
 makedocs(;
-    modules=[KeyedFrame],
+    modules=[KeyedFrames],
     format=:html,
     pages=[
         "Home" => "index.md",
     ],
-    repo="https://github.com/invenia/KeyedFrame.jl/blob/{commit}{path}#L{line}",
-    sitename="KeyedFrame.jl",
+    repo="https://github.com/invenia/KeyedFrames.jl/blob/{commit}{path}#L{line}",
+    sitename="KeyedFrames.jl",
     authors="Invenia Technical Computing Corporation",
     assets=[
         "assets/invenia.css",
@@ -16,7 +16,7 @@ makedocs(;
 )
 
 deploydocs(;
-    repo="github.com/invenia/KeyedFrame.jl",
+    repo="github.com/invenia/KeyedFrames.jl",
     target="build",
     julia="0.6",
     deps=nothing,

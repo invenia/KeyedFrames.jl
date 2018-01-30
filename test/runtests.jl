@@ -236,6 +236,24 @@ using Base.Test
         @test cp == KeyedFrame(DataFrame(; a=2:9, b=3:10, c=4:11), [:a, :b])
     end
 
+    @testset "unique" begin
+        kf4 = KeyedFrame(DataFrame(; a=[1, 2, 3, 1, 2], b=[1, 2, 3, 4, 2], c=1:5), [:a, :b])
+
+        # Use default columns (key)
+        expected = KeyedFrame(DataFrame(; a=[1, 2, 3, 1], b=1:4, c=1:4), [:a, :b])
+        @test isequal(unique(kf4), expected)
+        cp = deepcopy(kf4)
+        unique!(kf4)
+        @test isequal(kf4, expected)
+
+        # Specify columns
+        expected = KeyedFrame(DataFrame(; a=1:3, b=1:3, c=1:3), [:a, :b])
+        @test isequal(unique(kf4, :a), expected)
+        cp = deepcopy(kf4)
+        unique!(kf4, :a)
+        @test isequal(kf4, expected)
+    end
+
     @testset "join" begin
         expected = KeyedFrame(DataFrame(; a=1:5, b=2:6, c=3:7, d=4:8), [:a, :b])
         @test isequal(join(kf1, kf2), expected)
