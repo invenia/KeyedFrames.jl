@@ -88,8 +88,9 @@ using Base.Test
         end
     end
 
-    @testset "index/key" begin
+    @testset "names/index/key" begin
         for (kf, df) in [(kf1, df1), (kf2, df2), (kf3, df3)]
+            @test KeyedFrames.names(kf) == DataFrames.names(df)
             @test KeyedFrames.index(kf) == DataFrames.index(df)
             @test keys(kf) == kf.key
         end
@@ -234,6 +235,29 @@ using Base.Test
         cp = deepcopy(kf1)
         deleterows!(cp, [1, 10])
         @test cp == KeyedFrame(DataFrame(; a=2:9, b=3:10, c=4:11), [:a, :b])
+    end
+
+    @testset "delete!" begin
+        # df1 = DataFrame(; a=1:10, b=2:11, c=3:12), a, b are keys
+        for ind in (:b, 2, [:b], [2])
+            cp = deepcopy(kf1)
+            delete!(cp, ind)
+            @test cp == KeyedFrame(DataFrame(; a=1:10, c=3:12), [:a])
+        end
+        for ind in ([:a, :c], [1, 3])
+            cp = deepcopy(kf1)
+            delete!(cp, ind)
+            @test cp == KeyedFrame(DataFrame(; b=2:11), [:b])
+        end
+        for ind in ([:a, :b], [1, 2])
+            cp = deepcopy(kf1)
+            delete!(cp, ind)
+            @test cp == KeyedFrame(DataFrame(; c=3:12), Symbol[])
+        end
+        for ind in (:d, 4, [:a, :d], [1, 4])
+            cp = deepcopy(kf1)
+            @test_throws Exception delete!(cp, ind)
+        end
     end
 
     @testset "unique" begin
