@@ -2,8 +2,8 @@ __precompile__()
 module KeyedFrames
 
 using DataFrames
-import DataFrames: SubDataFrame, nrow, ncol, index, deleterows!, unique!, nonunique, head,
-       tail
+import DataFrames: SubDataFrame, nrow, ncol, index, deleterows!, delete!, unique!,
+       nonunique, head, tail
 
 struct KeyedFrame <: AbstractDataFrame
     frame::DataFrame
@@ -76,12 +76,16 @@ Base.hash(kf::KeyedFrame, h::UInt) = hash(kf.key, hash(kf.frame, h))
 nrow(kf::KeyedFrame) = nrow(kf.frame)
 ncol(kf::KeyedFrame) = ncol(kf.frame)
 
+##### ACCESSORS #####
+
+index(kf::KeyedFrame) = index(kf.frame)
+Base.names(kf::KeyedFrame) = names(kf.frame)
+
 ##### INDEXING #####
 
 const ColumnIndex = Union{Real, Symbol}
 
 Base.keys(kf::KeyedFrame) = kf.key
-index(kf::KeyedFrame) = index(kf.frame)
 Base.setindex!(kf::KeyedFrame, value, ind...) = setindex!(kf.frame, value, ind...)
 
 # I don't want to have to write the same function body several times, so...
@@ -143,7 +147,17 @@ end
 
 Base.push!(kf::KeyedFrame, data) = push!(kf.frame, data)
 Base.append!(kf::KeyedFrame, data) = append!(kf.frame, data)
+
 deleterows!(kf::KeyedFrame, ind) = deleterows!(kf.frame, ind)
+
+delete!(kf::KeyedFrame, ind::Union{Integer, Symbol}) = delete!(kf, [ind])
+delete!(kf::KeyedFrame, ind::Vector{<:Integer}) = delete!(kf, names(kf)[ind])
+
+function delete!(kf::KeyedFrame, ind::Vector{<:Symbol})
+    delete!(kf.frame, ind)
+    filter!(x -> !in(x, ind), kf.key)
+    return kf
+end
 
 ##### UNIQUE #####
 
@@ -198,14 +212,13 @@ end
 head(kf::KeyedFrame, r::Int) = KeyedFrame(head(kf.frame, r), kf.key)
 tail(kf::KeyedFrame, r::Int) = KeyedFrame(tail(kf.frame, r), kf.key)
 
-
 ##### PERMUTE #####
 
 function Base.permute!(df::DataFrame, index::AbstractVector)
-    permute!(df.columns, index)
+    permute!(DataFrames.columns(df), index)
     df.colindex = DataFrames.Index(
-        Dict(df.colindex.names[j] => i for (i, j) in enumerate(index)),
-        [df.colindex.names[j] for j in index]
+        Dict(names(df)[j] => i for (i, j) in enumerate(index)),
+        [names(df)[j] for j in index]
     )
 end
 
