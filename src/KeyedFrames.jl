@@ -71,6 +71,20 @@ Base.isequal(a::AbstractDataFrame, b::KeyedFrame) = false
 
 Base.hash(kf::KeyedFrame, h::UInt) = hash(kf.key, hash(kf.frame, h))
 
+if Pkg.installed("DataFrames") < v"0.11.3"
+    # Prevent fallback to DataFrames.hash(df::AbstractDataFrame)
+    Base.hash(kf::KeyedFrame) = hash(kf, zero(UInt))
+
+    function Base.hash(df::AbstractDataFrame, h::UInt)
+        h += UInt == UInt32 ? 0xfd8bb02e : 0x6215bada8c8c46de
+        h += hash(size(df))
+        for i in 1:size(df, 2)
+            h = hash(df[i], h)
+        end
+        return h
+    end
+end
+
 ##### SIZE #####
 
 nrow(kf::KeyedFrame) = nrow(kf.frame)

@@ -1,6 +1,7 @@
 using KeyedFrames
 using DataFrames
 using Base.Test
+using Missings
 
 @testset "KeyedFrames" begin
     df1 = DataFrame(; a=1:10, b=2:11, c=3:12)
