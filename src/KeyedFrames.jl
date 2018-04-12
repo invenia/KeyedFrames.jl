@@ -3,13 +3,13 @@ module KeyedFrames
 
 using DataFrames
 import DataFrames: SubDataFrame, nrow, ncol, index, deleterows!, delete!, unique!,
-       nonunique, head, tail
+       nonunique, head, tail, permutecols!
 
 struct KeyedFrame <: AbstractDataFrame
     frame::DataFrame
     key::Vector{Symbol}
 
-    function KeyedFrame(df::DataFrame, key::Vector{<:Symbol})
+    function KeyedFrame(df::DataFrame, key::Vector{Symbol})
         key = unique(key)
 
         if !issubset(key, names(df))
@@ -216,15 +216,9 @@ tail(kf::KeyedFrame, r::Int) = KeyedFrame(tail(kf.frame, r), kf.key)
 
 ##### PERMUTE #####
 
-function Base.permute!(df::DataFrame, index::AbstractVector)
-    permute!(DataFrames.columns(df), index)
-    df.colindex = DataFrames.Index(
-        Dict(names(df)[j] => i for (i, j) in enumerate(index)),
-        [names(df)[j] for j in index]
-    )
-end
+permutecols!(kf::KeyedFrame, p::AbstractVector) = permutecols!(kf.frame, p)
 
-Base.permute!(kf::KeyedFrame, index::AbstractVector) = permute!(kf.frame, index)
+@deprecate permute!(df::AbstractDataFrame, p::AbstractVector) permutecols!(df, p)
 
 export KeyedFrame
 

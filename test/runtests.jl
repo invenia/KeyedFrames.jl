@@ -363,15 +363,26 @@ using Base.Test
         @test isequal(join(kf2, kf3; on=[:a => :a, :d => :e], kind=:outer), expected)
     end
 
-    @testset "permute!" begin
+    @testset "permutecols!" begin
         cp = deepcopy(kf1)
 
-        permute!(cp, [1, 3, 2])
+        permutecols!(cp, [1, 3, 2])
         @test isequal(cp, KeyedFrame(DataFrame(; a=1:10, c=3:12, b=2:11), [:a, :b]))
-        permute!(cp, [2, 3, 1])
+        permutecols!(cp, [2, 3, 1])
         @test isequal(cp, KeyedFrame(DataFrame(; c=3:12, b=2:11, a=1:10), [:a, :b]))
 
-        @test_throws Exception permute!(cp, [1, 3])
-        @test_throws Exception permute!(cp, [1, 2, 3, 4])
+        cp = deepcopy(kf1)
+
+        permutecols!(cp, [:a, :c, :b])
+        @test isequal(cp, KeyedFrame(DataFrame(; a=1:10, c=3:12, b=2:11), [:a, :b]))
+        permutecols!(cp, [:c, :b, :a])
+        @test isequal(cp, KeyedFrame(DataFrame(; c=3:12, b=2:11, a=1:10), [:a, :b]))
+
+        @test_throws Exception permutecols!(cp, [1, 2])
+        @test_throws Exception permutecols!(cp, [1, 3])
+        @test_throws Exception permutecols!(cp, [1, 2, 3, 4])
+        @test_throws Exception permutecols!(cp, [:a, :b])
+        @test_throws Exception permutecols!(cp, [:a, :c])
+        @test_throws Exception permutecols!(cp, [:a, :b, :c, :d])
     end
 end

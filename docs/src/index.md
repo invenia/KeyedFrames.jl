@@ -173,6 +173,46 @@ julia> sort(kf2)
 │ 3   │ 2 │ 5 │ 2 │
 ```
 
+## Reordering Columns
+
+Columns may be reordered in-place with `permutecols!`.
+
+```julia
+julia> kf = KeyedFrame(DataFrame(; a=1:5, b=2:6, c=3:7), [:b, :a])
+5×3 KeyedFrames.KeyedFrame
+│ Row │ a │ b │ c │
+├─────┼───┼───┼───┤
+│ 1   │ 1 │ 2 │ 3 │
+│ 2   │ 2 │ 3 │ 4 │
+│ 3   │ 3 │ 4 │ 5 │
+│ 4   │ 4 │ 5 │ 6 │
+│ 5   │ 5 │ 6 │ 7 │
+
+julia> permutecols!(kf, [2, 1, 3]);
+
+julia> df
+5×3 KeyedFrames.KeyedFrame
+│ Row │ b │ a │ c │
+├─────┼───┼───┼───┤
+│ 1   │ 2 │ 1 │ 3 │
+│ 2   │ 3 │ 2 │ 4 │
+│ 3   │ 4 │ 3 │ 5 │
+│ 4   │ 5 │ 4 │ 6 │
+│ 5   │ 6 │ 5 │ 7 │
+
+julia> permutecols!(kf, [:c, :a, :b]);
+
+julia> df
+5×3 KeyedFrames.KeyedFrame
+│ Row │ c │ a │ b │
+├─────┼───┼───┼───┤
+│ 1   │ 3 │ 1 │ 2 │
+│ 2   │ 4 │ 2 │ 3 │
+│ 3   │ 5 │ 3 │ 4 │
+│ 4   │ 6 │ 4 │ 5 │
+│ 5   │ 7 │ 5 │ 6 │
+```
+
 ## Equality
 
 Two `KeyedFrame`s are considered equal to (`==`) each other if their data are equal and they
