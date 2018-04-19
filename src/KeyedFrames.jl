@@ -220,6 +220,7 @@ permutecols!(kf::KeyedFrame, p::AbstractVector) = permutecols!(kf.frame, p)
 
 @deprecate permute!(df::AbstractDataFrame, p::AbstractVector) permutecols!(df, p)
 
-export KeyedFrame
+# TODO remove permute! after a suitable period
+export KeyedFrame, permute!
 
 end

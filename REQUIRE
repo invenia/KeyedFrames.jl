@@ -1,2 +1,2 @@
 julia 0.6
-DataFrames 0.11.6
+DataFrames 0.11.7	# a701acd required for permutecols!
