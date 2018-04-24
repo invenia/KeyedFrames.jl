@@ -172,8 +172,8 @@ using Base.Test
 
     @testset "sort" begin
         # No columns specified (sort by key)
-        expected = KeyedFrame(DataFrame(; a=[1, 4, 2], e=[2, 2, 5], f=[3, 1, 2]), [:a, :e])
-        reversed = KeyedFrame(DataFrame(; a=[2, 4, 1], e=[5, 2, 2], f=[2, 1, 3]), [:a, :e])
+        expected = KeyedFrame(DataFrame(; a=[1, 4, 2], e=[2, 2, 5], f=[3, 1, 2]), [:e, :a])
+        reversed = KeyedFrame(DataFrame(; a=[2, 4, 1], e=[5, 2, 2], f=[2, 1, 3]), [:e, :a])
 
         @test sort(kf3) == expected
         @test sort(kf3; rev=true) == reversed
@@ -186,23 +186,32 @@ using Base.Test
         @test sort!(cp; rev=true) == reversed
         @test cp == reversed
 
-        expected = KeyedFrame(DataFrame(; a=[1, 4, 2], e=[2, 2, 5], f=[3, 1, 2]), [:a, :e])
-        reversed = KeyedFrame(DataFrame(; a=[2, 4, 1], e=[5, 2, 2], f=[2, 1, 3]), [:a, :e])
+        @test issorted(kf1)
+        @test !issorted(kf3)
+        @test issorted(expected)
+        @test !issorted(reversed)
+        @test issorted(reversed; rev=true)
 
         # Columns specified
-        expected = KeyedFrame(DataFrame(; a=[1, 2, 4], e=[2, 5, 2], f=[3, 2, 1]), [:a, :e])
-        reversed = KeyedFrame(DataFrame(; a=[4, 2, 1], e=[2, 5, 2], f=[1, 2, 3]), [:a, :e])
+        expected = KeyedFrame(DataFrame(; a=[1, 2, 4], e=[2, 5, 2], f=[3, 2, 1]), [:e, :a])
+        reversed = KeyedFrame(DataFrame(; a=[4, 2, 1], e=[2, 5, 2], f=[1, 2, 3]), [:e, :a])
 
-        @test sort(kf3; cols=:a) == expected
-        @test sort(kf3; cols=:a, rev=true) == reversed
+        @test sort(kf3, :a) == expected
+        @test sort(kf3, :a; rev=true) == reversed
 
         cp = deepcopy(kf3)
-        @test sort!(cp; cols=:a) == expected
+        @test sort!(cp, :a) == expected
         @test cp == expected
 
         cp = deepcopy(kf3)
-        @test sort!(cp; cols=:a, rev=true) == reversed
+        @test sort!(cp, :a; rev=true) == reversed
         @test cp == reversed
+
+        @test !issorted(expected)
+        @test issorted(expected, :a)
+        @test !issorted(reversed)
+        @test !issorted(reversed, :a)
+        @test issorted(reversed, :a; rev=true)
     end
 
     @testset "push!" begin
@@ -238,7 +247,6 @@ using Base.Test
     end
 
     @testset "delete!" begin
-        # df1 = DataFrame(; a=1:10, b=2:11, c=3:12), a, b are keys
         for ind in (:b, 2, [:b], [2])
             cp = deepcopy(kf1)
             delete!(cp, ind)
