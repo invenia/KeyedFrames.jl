@@ -133,16 +133,16 @@ Base.getindex(kf::KeyedFrame, row::Real, col::Colon) = kf[[row], col]
 ##### SORTING #####
 
 function Base.sort(kf::KeyedFrame, cols=nothing; kwargs...)
-    return KeyedFrame(sort(kf.frame, cols == nothing ? kf.key : cols; kwargs...), kf.key)
+    return KeyedFrame(sort(kf.frame, cols === nothing ? kf.key : cols; kwargs...), kf.key)
 end
 
 function Base.sort!(kf::KeyedFrame, cols=nothing; kwargs...)
-    sort!(kf.frame, cols == nothing ? kf.key : cols; kwargs...)
+    sort!(kf.frame, cols === nothing ? kf.key : cols; kwargs...)
     return kf
 end
 
 function Base.issorted(kf::KeyedFrame, cols=nothing; kwargs...)
-    return issorted(kf.frame, cols == nothing ? kf.key : cols; kwargs...)
+    return issorted(kf.frame, cols === nothing ? kf.key : cols; kwargs...)
 end
 
 ##### PUSH/APPEND/DELETE #####
