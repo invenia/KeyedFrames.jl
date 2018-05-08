@@ -167,7 +167,10 @@ function rename!(kf::KeyedFrame, nms)
     rename!(kf.frame, nms)
 
     for (from, to) in nms
-        kf.key[kf.key .== from] = to
+        i = findfirst(kf.key, from)
+        if i != 0
+            kf.key[i] = to
+        end
     end
 
     return kf
