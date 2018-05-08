@@ -268,6 +268,32 @@ using Base.Test
         end
     end
 
+    @testset "rename" begin
+        initial = copy(kf1)
+        expected = KeyedFrame(DataFrame(; new_a=1:10, b=2:11, new_c=3:12), [:new_a, :b])
+
+        @test rename(initial, :a => :new_a, :c => :new_c) == expected
+        @test initial == kf1
+        @test rename(initial, [:a => :new_a, :c => :new_c]) == expected
+        @test initial == kf1
+        @test rename(initial, Dict(:a => :new_a, :c => :new_c)) == expected
+        @test initial == kf1
+        @test rename(x -> x == :b ? x : Symbol("new_$x"), initial) == expected
+        @test initial == kf1
+
+        @test rename!(initial, :a => :new_a, :c => :new_c) == expected
+        @test initial == expected
+        initial = copy(kf1)
+        @test rename!(initial, [:a => :new_a, :c => :new_c]) == expected
+        @test initial == expected
+        initial = copy(kf1)
+        @test rename!(initial, Dict(:a => :new_a, :c => :new_c)) == expected
+        @test initial == expected
+        initial = copy(kf1)
+        @test rename!(x -> x == :b ? x : Symbol("new_$x"), initial) == expected
+        @test initial == expected
+    end
+
     @testset "unique" begin
         kf4 = KeyedFrame(DataFrame(; a=[1, 2, 3, 1, 2], b=[1, 2, 3, 4, 2], c=1:5), [:a, :b])
 
