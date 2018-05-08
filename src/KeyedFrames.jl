@@ -2,8 +2,8 @@ __precompile__()
 module KeyedFrames
 
 using DataFrames
-import DataFrames: SubDataFrame, nrow, ncol, index, deleterows!, delete!, unique!,
-       nonunique, head, tail
+import DataFrames: SubDataFrame, nrow, ncol, index, deleterows!, delete!, rename!, rename,
+       unique!, nonunique, head, tail
 
 struct KeyedFrame <: AbstractDataFrame
     frame::DataFrame
@@ -160,6 +160,24 @@ function delete!(kf::KeyedFrame, ind::Vector{<:Symbol})
     filter!(x -> !in(x, ind), kf.key)
     return kf
 end
+
+##### RENAME #####
+
+function rename!(kf::KeyedFrame, nms)
+    rename!(kf.frame, nms)
+
+    for (from, to) in nms
+        kf.key[kf.key .== from] = to
+    end
+
+    return kf
+end
+
+rename!(kf::KeyedFrame, nms::Pair{Symbol, Symbol}...) = rename!(kf, collect(nms))
+rename!(f::Function, kf::KeyedFrame) = rename!(kf, [(nm => f(nm)) for nm in names(kf)])
+
+rename(kf::KeyedFrame, args...) = rename!(copy(kf), args...)
+rename(f::Function, kf::KeyedFrame) = rename!(f, copy(kf))
 
 ##### UNIQUE #####
 
