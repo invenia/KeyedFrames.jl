@@ -11,11 +11,15 @@ struct KeyedFrame <: AbstractDataFrame
 
     function KeyedFrame(df::DataFrame, key::Vector{<:Symbol})
         key = unique(key)
+        df_names = names(df)
 
-        if !issubset(key, names(df))
+        if !issubset(key, df_names)
             throw(
                 ArgumentError(
-                    "The columns provided for the key must all be present in the DataFrame"
+                    string(
+                        "The columns provided for the key ($key) must all be",
+                        "present in the DataFrame ($df_names)."
+                    )
                 )
             )
         end
