@@ -1,6 +1,6 @@
 __precompile__()
 module KeyedFrames
-
+using Compat: findfirst
 using DataFrames
 import DataFrames: SubDataFrame, nrow, ncol, index, deleterows!, delete!, rename!, rename,
        unique!, nonunique, head, tail
@@ -58,45 +58,47 @@ by virtue of having the columns listed in a different order in their `key`s.
 """
 KeyedFrame
 
+DataFrame(kf::KeyedFrame) = frame(kf)
 Base.copy(kf::KeyedFrame) = KeyedFrame(copy(DataFrame(kf)), copy(keys(kf)))
 Base.deepcopy(kf::KeyedFrame) = KeyedFrame(deepcopy(DataFrame(kf)), deepcopy(keys(kf)))
 
-Base.convert(::Type{DataFrame}, kf::KeyedFrame) = kf.frame
+Base.convert(::Type{DataFrame}, kf::KeyedFrame) = frame(kf)
 
-SubDataFrame(kf::KeyedFrame, args...) = SubDataFrame(kf.frame, args...)
+SubDataFrame(kf::KeyedFrame, args...) = SubDataFrame(frame(kf), args...)
 
 ##### EQUALITY #####
 
-Base.:(==)(a::KeyedFrame, b::KeyedFrame) = a.frame == b.frame && sort(a.key) == sort(b.key)
+Base.:(==)(a::KeyedFrame, b::KeyedFrame) = frame(a) == frame(b) && sort(keys(a)) == sort(keys(b))
 
-Base.isequal(a::KeyedFrame, b::KeyedFrame) = isequal(a.frame,b.frame)&&isequal(a.key,b.key)
+Base.isequal(a::KeyedFrame, b::KeyedFrame) = isequal(frame(a), frame(b))&&isequal(keys(a), keys(b))
 Base.isequal(a::KeyedFrame, b::AbstractDataFrame) = false
 Base.isequal(a::AbstractDataFrame, b::KeyedFrame) = false
 
-Base.hash(kf::KeyedFrame, h::UInt) = hash(kf.key, hash(kf.frame, h))
+Base.hash(kf::KeyedFrame, h::UInt) = hash(keys(kf), hash(frame(kf), h))
 
 ##### SIZE #####
 
-nrow(kf::KeyedFrame) = nrow(kf.frame)
-ncol(kf::KeyedFrame) = ncol(kf.frame)
+nrow(kf::KeyedFrame) = nrow(frame(kf))
+ncol(kf::KeyedFrame) = ncol(frame(kf))
 
 ##### ACCESSORS #####
 
-index(kf::KeyedFrame) = index(kf.frame)
-Base.names(kf::KeyedFrame) = names(kf.frame)
+index(kf::KeyedFrame) = index(frame(kf))
+Base.names(kf::KeyedFrame) = names(frame(kf))
 
 ##### INDEXING #####
 
 const ColumnIndex = Union{Real, Symbol}
 
-Base.keys(kf::KeyedFrame) = kf.key
-Base.setindex!(kf::KeyedFrame, value, ind...) = setindex!(kf.frame, value, ind...)
+frame(kf::KeyedFrame) = getfield(kf, :frame)
+Base.keys(kf::KeyedFrame) = getfield(kf, :key)
+Base.setindex!(kf::KeyedFrame, value, ind...) = setindex!(frame(kf), value, ind...)
 
 # I don't want to have to write the same function body several times, so...
 function _kf_getindex(kf::KeyedFrame, index...)
     # If indexing by column, some keys might be removed.
-    df = getindex(kf.frame, index...)
-    return KeyedFrame(df, intersect(names(df), kf.key))
+    df = getindex(frame(kf), index...)
+    return KeyedFrame(df, intersect(names(df), keys(kf)))
 end
 
 # Returns a KeyedFrame
@@ -107,19 +109,19 @@ Base.getindex(kf::KeyedFrame, ::Colon, ::Colon) = copy(kf)
 Base.getindex(kf::KeyedFrame, col::AbstractVector) = _kf_getindex(kf, col)
 
 # Returns a column
-Base.getindex(kf::KeyedFrame, col::ColumnIndex) = kf.frame[col]
+Base.getindex(kf::KeyedFrame, col::ColumnIndex) = frame(kf)[col]
 
 # Returns a KeyedFrame or a column (depending on the type of col)
 Base.getindex(kf::KeyedFrame, ::Colon, col) = kf[col]
 
 # Returns a scalar
-Base.getindex(kf::KeyedFrame, row::Real, col::ColumnIndex) = kf.frame[row, col]
+Base.getindex(kf::KeyedFrame, row::Real, col::ColumnIndex) = frame(kf)[row, col]
 
 # Returns a KeyedFrame
 Base.getindex(kf::KeyedFrame, row::Real, col::AbstractVector) = _kf_getindex(kf, row, col)
 
 # Returns a column
-Base.getindex(kf::KeyedFrame, row::AbstractVector, col::ColumnIndex) = kf.frame[row, col]
+Base.getindex(kf::KeyedFrame, row::AbstractVector, col::ColumnIndex) = frame(kf)[row, col]
 
 # Returns a KeyedFrame
 function Base.getindex(kf::KeyedFrame, row::AbstractVector, col::AbstractVector)
@@ -137,43 +139,43 @@ Base.getindex(kf::KeyedFrame, row::Real, col::Colon) = kf[[row], col]
 ##### SORTING #####
 
 function Base.sort(kf::KeyedFrame, cols=nothing; kwargs...)
-    return KeyedFrame(sort(kf.frame, cols === nothing ? kf.key : cols; kwargs...), kf.key)
+    return KeyedFrame(sort(frame(kf), cols === nothing ? keys(kf) : cols; kwargs...), keys(kf))
 end
 
 function Base.sort!(kf::KeyedFrame, cols=nothing; kwargs...)
-    sort!(kf.frame, cols === nothing ? kf.key : cols; kwargs...)
+    sort!(frame(kf), cols === nothing ? keys(kf) : cols; kwargs...)
     return kf
 end
 
 function Base.issorted(kf::KeyedFrame, cols=nothing; kwargs...)
-    return issorted(kf.frame, cols === nothing ? kf.key : cols; kwargs...)
+    return issorted(frame(kf), cols === nothing ? keys(kf) : cols; kwargs...)
 end
 
 ##### PUSH/APPEND/DELETE #####
 
-Base.push!(kf::KeyedFrame, data) = push!(kf.frame, data)
-Base.append!(kf::KeyedFrame, data) = append!(kf.frame, data)
+Base.push!(kf::KeyedFrame, data) = push!(frame(kf), data)
+Base.append!(kf::KeyedFrame, data) = append!(frame(kf), data)
 
-deleterows!(kf::KeyedFrame, ind) = deleterows!(kf.frame, ind)
+deleterows!(kf::KeyedFrame, ind) = deleterows!(frame(kf), ind)
 
 delete!(kf::KeyedFrame, ind::Union{Integer, Symbol}) = delete!(kf, [ind])
 delete!(kf::KeyedFrame, ind::Vector{<:Integer}) = delete!(kf, names(kf)[ind])
 
 function delete!(kf::KeyedFrame, ind::Vector{<:Symbol})
-    delete!(kf.frame, ind)
-    filter!(x -> !in(x, ind), kf.key)
+    delete!(frame(kf), ind)
+    filter!(x -> !in(x, ind), keys(kf))
     return kf
 end
 
 ##### RENAME #####
 
 function rename!(kf::KeyedFrame, nms)
-    rename!(kf.frame, nms)
+    rename!(frame(kf), nms)
 
     for (from, to) in nms
-        i = findfirst(kf.key, from)
-        if i != 0
-            kf.key[i] = to
+        i = findfirst(isequal(from), keys(kf))
+        if i !== nothing
+            keys(kf)[i] = to
         end
     end
 
@@ -189,33 +191,33 @@ rename(f::Function, kf::KeyedFrame) = rename!(f, copy(kf))
 ##### UNIQUE #####
 
 function Base.unique(kf::KeyedFrame, cols=nothing)
-    return KeyedFrame(unique(kf.frame, cols === nothing ? kf.key : cols), kf.key)
+    return KeyedFrame(unique(frame(kf), cols === nothing ? keys(kf) : cols), keys(kf))
 end
 
 function unique!(kf::KeyedFrame, cols=nothing)
-    unique!(kf.frame, cols === nothing ? kf.key : cols)
+    unique!(frame(kf), cols === nothing ? keys(kf) : cols)
     return kf
 end
 
-nonunique(kf::KeyedFrame) = nonunique(kf.frame, kf.key)
+nonunique(kf::KeyedFrame) = nonunique(frame(kf), keys(kf))
 
 ##### JOIN #####
 
 # Returns a KeyedFrame
 function Base.join(a::KeyedFrame, b::KeyedFrame; on=nothing, kind=:inner, kwargs...)
     df = join(
-        a.frame,
-        b.frame;
-        on=on === nothing ? intersect(a.key, b.key) : on,
+        frame(a),
+        frame(b);
+        on=on === nothing ? intersect(keys(a), keys(b)) : on,
         kind=kind,
         kwargs...,
     )
 
     if kind in (:semi, :anti)
-        key = intersect(a.key, names(df))
+        key = intersect(keys(a), names(df))
     else
         # A join can sometimes rename columns, meaning some of the key columns "disappear"
-        key = intersect(union(a.key, b.key), names(df))
+        key = intersect(union(keys(a), keys(b)), names(df))
     end
 
     return KeyedFrame(df, key)
@@ -223,33 +225,33 @@ end
 
 # Returns a KeyedFrame
 function Base.join(a::KeyedFrame, b::AbstractDataFrame; on=nothing, kwargs...)
-    df = join(a.frame, b; on=on === nothing ? intersect(a.key, names(b)) : on, kwargs...)
+    df = join(frame(a), b; on=on === nothing ? intersect(keys(a), names(b)) : on, kwargs...)
 
     # A join can sometimes rename columns, meaning some of the key columns "disappear"
-    return KeyedFrame(df, intersect(a.key, names(df)))
+    return KeyedFrame(df, intersect(keys(a), names(df)))
 end
 
 # Does NOT return a KeyedFrame
 function Base.join(a::AbstractDataFrame, b::KeyedFrame; on=nothing, kwargs...)
-    return join(a, b.frame; on=on === nothing ? intersect(b.key, names(a)) : on, kwargs...)
+    return join(a, frame(b); on=on === nothing ? intersect(keys(b), names(a)) : on, kwargs...)
 end
 
 ##### HEAD/TAIL #####
 
-head(kf::KeyedFrame, r::Int) = KeyedFrame(head(kf.frame, r), kf.key)
-tail(kf::KeyedFrame, r::Int) = KeyedFrame(tail(kf.frame, r), kf.key)
+head(kf::KeyedFrame, r::Int) = KeyedFrame(head(frame(kf), r), keys(kf))
+tail(kf::KeyedFrame, r::Int) = KeyedFrame(tail(frame(kf), r), keys(kf))
 
 ##### PERMUTE #####
 
 function Base.permute!(df::DataFrame, index::AbstractVector)
     permute!(DataFrames.columns(df), index)
-    df.colindex = DataFrames.Index(
+    setfield!(df, :colindex, DataFrames.Index(
         Dict(names(df)[j] => i for (i, j) in enumerate(index)),
         [names(df)[j] for j in index]
-    )
+    ))
 end
 
-Base.permute!(kf::KeyedFrame, index::AbstractVector) = permute!(kf.frame, index)
+Base.permute!(kf::KeyedFrame, index::AbstractVector) = permute!(frame(kf), index)
 
 export KeyedFrame
 
