@@ -1,6 +1,6 @@
 using KeyedFrames
 using DataFrames
-using Base.Test
+using Compat.Test
 
 @testset "KeyedFrames" begin
     df1 = DataFrame(; a=1:10, b=2:11, c=3:12)
@@ -9,21 +9,21 @@ using Base.Test
 
     @testset "constructor" begin
         kf1 = KeyedFrame(df1, [:a, :b])
-        @test kf1.frame === df1
-        @test kf1.key == [:a, :b]
+        @test KeyedFrames.frame(kf1) === df1
+        @test keys(kf1) == [:a, :b]
 
         kf2 = KeyedFrame(df2, :a)
-        @test kf2.frame === df2
-        @test kf2.key == [:a]
+        @test KeyedFrames.frame(kf2) === df2
+        @test keys(kf2) == [:a]
 
         kf3 = KeyedFrame(df3, ["e", "a"])
-        @test kf3.frame === df3
-        @test kf3.key == [:e, :a]
+        @test KeyedFrames.frame(kf3) === df3
+        @test keys(kf3) == [:e, :a]
 
         @test_throws ArgumentError KeyedFrame(df1, [:a, :b, :d])
         @test_throws ArgumentError KeyedFrame(df1, :d)
 
-        @test KeyedFrame(df1, [:a, :a, :b, :a]).key == [:a, :b]
+        @test keys(KeyedFrame(df1, [:a, :a, :b, :a])) == [:a, :b]
     end
 
     kf1 = KeyedFrame(df1, [:a, :b])
@@ -92,7 +92,7 @@ using Base.Test
         for (kf, df) in [(kf1, df1), (kf2, df2), (kf3, df3)]
             @test KeyedFrames.names(kf) == DataFrames.names(df)
             @test KeyedFrames.index(kf) == DataFrames.index(df)
-            @test keys(kf) == kf.key
+            @test keys(kf) == keys(kf)
         end
     end
 
@@ -156,7 +156,7 @@ using Base.Test
         cp[1, 1:2] = 10
         @test isequal(cp, KeyedFrame(DataFrame(;a=[10, 2, 3, 4, 5],d=[10, 5, 6, 7, 8]), :a))
     end
- 
+
     @testset "head/tail" begin
         # Don't assume that n will always equal 6
         @test head(kf1) isa KeyedFrame
@@ -351,7 +351,7 @@ using Base.Test
         )
         @test isequal(join(kf2, df1; kind=:right), expected)
         expected = DataFrame(; a=1:10, d=[4:8; fill(missing, 5)], b=2:11, c=3:12)
-        @test isequal(join(df2, kf1; kind=:right), DataFrame(expected))
+        @test isequal(join(df2, kf1; kind=:right), expected)
 
         expected = KeyedFrame(DataFrame(; a=1:5, b=2:6, c=3:7), [:a, :b])
         @test isequal(join(kf1, kf2; kind=:semi), expected)
@@ -391,8 +391,8 @@ using Base.Test
 
     @testset "permute!" begin
         cp = deepcopy(kf1)
-
         permute!(cp, [1, 3, 2])
+
         @test isequal(cp, KeyedFrame(DataFrame(; a=1:10, c=3:12, b=2:11), [:a, :b]))
         permute!(cp, [2, 3, 1])
         @test isequal(cp, KeyedFrame(DataFrame(; c=3:12, b=2:11, a=1:10), [:a, :b]))

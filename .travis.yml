@@ -5,6 +5,8 @@ os:
   - osx
 julia:
   - 0.6
+  - 0.7
+  - 1.0
   - nightly
 matrix:
   allow_failures:
@@ -12,9 +14,15 @@ matrix:
   fast_finish: true
 notifications:
   email: false
-script:
-  - if [[ -a .git/shallow ]]; then git fetch --unshallow; fi
-  - julia -e 'Pkg.clone(pwd()); Pkg.build("KeyedFrames"); Pkg.test("KeyedFrames"; coverage=true)'
+# uncomment the following lines to override the default test script
+# script:
+#   - if [[ -a .git/shallow ]]; then git fetch --unshallow; fi
+#   - julia -e 'Pkg.clone(pwd()); Pkg.build("KeyedFrames"); Pkg.test("KeyedFrames"; coverage=true)'
 after_success:
-  - julia -e 'cd(Pkg.dir("KeyedFrames")); Pkg.add("Coverage"); using Coverage; Codecov.submit(process_folder())'
-  - julia -e 'Pkg.add("Documenter"); cd(Pkg.dir("KeyedFrames")); include(joinpath("docs", "make.jl"))'
+  # push coverage results to Codecov
+  - |
+    julia -e '
+      VERSION >= v"0.7.0-DEV.3656" && using Pkg
+      VERSION >= v"0.7.0-DEV.5183" || cd(Pkg.dir("KeyedFrames"))
+      Pkg.add("KeyedFrames"); using Coverage
+      Codecov.submit(process_folder())'
