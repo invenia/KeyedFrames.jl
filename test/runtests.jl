@@ -1,5 +1,6 @@
 using KeyedFrames
 using DataFrames
+using Compat: nameof
 using Compat.Test
 
 @testset "KeyedFrames" begin
@@ -157,17 +158,19 @@ using Compat.Test
         @test isequal(cp, KeyedFrame(DataFrame(;a=[10, 2, 3, 4, 5],d=[10, 5, 6, 7, 8]), :a))
     end
 
-    @testset "head/tail" begin
+    first = VERSION < v"0.7" ? KeyedFrames.head : KeyedFrames.first
+    last = VERSION < v"0.7" ? KeyedFrames.tail : KeyedFrames.last
+    @testset "first/last" begin
         # Don't assume that n will always equal 6
-        @test head(kf1) isa KeyedFrame
-        @test isequal(head(kf1, 1), kf1[1, :])
-        @test isequal(head(kf1, 3), kf1[1:3, :])
-        @test isequal(head(kf1, 6), kf1[1:6, :])
+        @test first(kf1) isa KeyedFrame
+        @test isequal(first(kf1, 1), kf1[1, :])
+        @test isequal(first(kf1, 3), kf1[1:3, :])
+        @test isequal(first(kf1, 6), kf1[1:6, :])
 
-        @test tail(kf1) isa KeyedFrame
-        @test isequal(tail(kf1, 1), kf1[end, :])
-        @test isequal(tail(kf1, 3), kf1[end - 2:end, :])
-        @test isequal(tail(kf1, 6), kf1[end - 5:end, :])
+        @test last(kf1) isa KeyedFrame
+        @test isequal(last(kf1, 1), kf1[end, :])
+        @test isequal(last(kf1, 3), kf1[end - 2:end, :])
+        @test isequal(last(kf1, 6), kf1[end - 5:end, :])
     end
 
     @testset "sort" begin
@@ -246,25 +249,26 @@ using Compat.Test
         @test cp == KeyedFrame(DataFrame(; a=2:9, b=3:10, c=4:11), [:a, :b])
     end
 
-    @testset "delete!" begin
+    deletecols! = VERSION < v"0.7" ? KeyedFrames.delete! : KeyedFrames.deletecols!
+    @testset "deletecols!" begin
         for ind in (:b, 2, [:b], [2])
             cp = deepcopy(kf1)
-            delete!(cp, ind)
+            deletecols!(cp, ind)
             @test cp == KeyedFrame(DataFrame(; a=1:10, c=3:12), [:a])
         end
         for ind in ([:a, :c], [1, 3])
             cp = deepcopy(kf1)
-            delete!(cp, ind)
+            deletecols!(cp, ind)
             @test cp == KeyedFrame(DataFrame(; b=2:11), [:b])
         end
         for ind in ([:a, :b], [1, 2])
             cp = deepcopy(kf1)
-            delete!(cp, ind)
+            deletecols!(cp, ind)
             @test cp == KeyedFrame(DataFrame(; c=3:12), Symbol[])
         end
         for ind in (:d, 4, [:a, :d], [1, 4])
             cp = deepcopy(kf1)
-            @test_throws Exception delete!(cp, ind)
+            @test_throws Exception deletecols!(cp, ind)
         end
     end
 
@@ -389,15 +393,16 @@ using Compat.Test
         @test isequal(join(kf2, kf3; on=[:a => :a, :d => :e], kind=:outer), expected)
     end
 
-    @testset "permute!" begin
+    permutecols! = VERSION < v"0.7" ? KeyedFrames.permute! : KeyedFrames.permutecols!
+    @testset "permutecols!" begin
         cp = deepcopy(kf1)
-        permute!(cp, [1, 3, 2])
+        permutecols!(cp, [1, 3, 2])
 
         @test isequal(cp, KeyedFrame(DataFrame(; a=1:10, c=3:12, b=2:11), [:a, :b]))
-        permute!(cp, [2, 3, 1])
+        permutecols!(cp, [2, 3, 1])
         @test isequal(cp, KeyedFrame(DataFrame(; c=3:12, b=2:11, a=1:10), [:a, :b]))
 
-        @test_throws Exception permute!(cp, [1, 3])
-        @test_throws Exception permute!(cp, [1, 2, 3, 4])
+        @test_throws Exception permutecols!(cp, [1, 3])
+        @test_throws Exception permutecols!(cp, [1, 2, 3, 4])
     end
 end
