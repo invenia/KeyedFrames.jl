@@ -1,9 +1,15 @@
 __precompile__()
 module KeyedFrames
-using Compat: findfirst
+using Compat: findfirst, Nothing
 using DataFrames
-import DataFrames: SubDataFrame, nrow, ncol, index, deleterows!, delete!, rename!, rename,
-       unique!, nonunique, head, tail
+import DataFrames: SubDataFrame, nrow, ncol, index, deleterows!, rename!, rename,
+       unique!, nonunique
+
+if VERSION < v"0.7"
+    import DataFrames: delete!, head, tail
+else
+    import DataFrames: deletecols!, first, last, permutecols!
+end
 
 struct KeyedFrame <: AbstractDataFrame
     frame::DataFrame
@@ -158,13 +164,17 @@ Base.append!(kf::KeyedFrame, data) = append!(frame(kf), data)
 
 deleterows!(kf::KeyedFrame, ind) = deleterows!(frame(kf), ind)
 
-delete!(kf::KeyedFrame, ind::Union{Integer, Symbol}) = delete!(kf, [ind])
-delete!(kf::KeyedFrame, ind::Vector{<:Integer}) = delete!(kf, names(kf)[ind])
+deletecols!(kf::KeyedFrame, ind::Union{Integer, Symbol}) = deletecols!(kf, [ind])
+deletecols!(kf::KeyedFrame, ind::Vector{<:Integer}) = deletecols!(kf, names(kf)[ind])
 
-function delete!(kf::KeyedFrame, ind::Vector{<:Symbol})
-    delete!(frame(kf), ind)
+function deletecols!(kf::KeyedFrame, ind::Vector{<:Symbol})
+    @static VERSION < v"0.7" ? delete!(frame(kf), ind) : deletecols!(frame(kf), ind)
     filter!(x -> !in(x, ind), keys(kf))
     return kf
+end
+
+if VERSION < v"0.7"
+    delete!(kf::KeyedFrame, ind) = deletecols!(kf, ind)
 end
 
 ##### RENAME #####
@@ -190,14 +200,16 @@ rename(f::Function, kf::KeyedFrame) = rename!(f, copy(kf))
 
 ##### UNIQUE #####
 
-function Base.unique(kf::KeyedFrame, cols=nothing)
-    return KeyedFrame(unique(frame(kf), cols === nothing ? keys(kf) : cols), keys(kf))
-end
-
-function unique!(kf::KeyedFrame, cols=nothing)
-    unique!(frame(kf), cols === nothing ? keys(kf) : cols)
+_unique(kf::KeyedFrame, cols) = KeyedFrame(unique(frame(kf), cols), keys(kf))
+function _unique!(kf::KeyedFrame, cols)
+    unique!(frame(kf), cols)
     return kf
 end
+
+Base.unique(kf::KeyedFrame, cols::AbstractVector) = _unique(kf, cols)
+Base.unique(kf::KeyedFrame, cols::Union{Integer, Symbol, Colon}) = _unique(kf, cols)
+unique!(kf::KeyedFrame, cols::Union{Integer, Symbol, Colon}) = _unique!(kf, cols)
+unique!(kf::KeyedFrame, cols::AbstractVector) = _unique!(kf, cols)
 
 nonunique(kf::KeyedFrame) = nonunique(frame(kf), keys(kf))
 
@@ -236,22 +248,32 @@ function Base.join(a::AbstractDataFrame, b::KeyedFrame; on=nothing, kwargs...)
     return join(a, frame(b); on=on === nothing ? intersect(keys(b), names(a)) : on, kwargs...)
 end
 
-##### HEAD/TAIL #####
+##### FIRST/LAST #####
 
-head(kf::KeyedFrame, r::Int) = KeyedFrame(head(frame(kf), r), keys(kf))
-tail(kf::KeyedFrame, r::Int) = KeyedFrame(tail(frame(kf), r), keys(kf))
+if VERSION < v"0.7"
+    head(kf::KeyedFrame, r::Int) = KeyedFrame(head(frame(kf), r), keys(kf))
+    tail(kf::KeyedFrame, r::Int) = KeyedFrame(tail(frame(kf), r), keys(kf))
+else
+    first(kf::KeyedFrame, r::Int) = KeyedFrame(first(frame(kf), r), keys(kf))
+    last(kf::KeyedFrame, r::Int) = KeyedFrame(last(frame(kf), r), keys(kf))
+end
 
 ##### PERMUTE #####
 
-function Base.permute!(df::DataFrame, index::AbstractVector)
-    permute!(DataFrames.columns(df), index)
-    setfield!(df, :colindex, DataFrames.Index(
-        Dict(names(df)[j] => i for (i, j) in enumerate(index)),
-        [names(df)[j] for j in index]
-    ))
-end
 
-Base.permute!(kf::KeyedFrame, index::AbstractVector) = permute!(frame(kf), index)
+if VERSION < v"0.7"
+    function Base.permute!(df::DataFrame, index::AbstractVector)
+        permute!(DataFrames.columns(df), index)
+        setfield!(df, :colindex, DataFrames.Index(
+            Dict(names(df)[j] => i for (i, j) in enumerate(index)),
+            [names(df)[j] for j in index]
+        ))
+    end
+
+    Base.permute!(kf::KeyedFrame, index::AbstractVector) = permute!(frame(kf), index)
+else
+    permutecols!(kf::KeyedFrame, index::AbstractVector) = permutecols!(frame(kf), index)
+end
 
 export KeyedFrame
 
