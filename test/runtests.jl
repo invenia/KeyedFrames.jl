@@ -215,6 +215,9 @@ using Compat.Test
         @test !issorted(reversed)
         @test !issorted(reversed, :a)
         @test issorted(reversed, :a; rev=true)
+
+        # Test return type of `sort!`
+        @test isa(sort!(deepcopy(kf3), :a), KeyedFrame)
     end
 
     @testset "push!" begin
@@ -222,6 +225,9 @@ using Compat.Test
 
         push!(cp, [6, 9])
         @test cp == KeyedFrame(DataFrame(; a=1:6, d=4:9), :a)
+
+        # Test return type of `push!`
+        @test isa(push!(deepcopy(kf2), [6, 9]), KeyedFrame)
     end
 
     @testset "append!" begin
@@ -233,6 +239,12 @@ using Compat.Test
         cp = deepcopy(kf2)
         append!(cp, KeyedFrame(DataFrame(; a=6:8, d=9:11), [:a, :d]))
         @test cp == KeyedFrame(DataFrame(; a=1:8, d=4:11), :a)
+
+        # Test return type of `append!`
+        @test isa(
+            append!(deepcopy(kf2), KeyedFrame(DataFrame(; a=6:8, d=9:11), [:a, :d])),
+            KeyedFrame
+        )
     end
 
     @testset "deleterows!" begin
@@ -247,6 +259,9 @@ using Compat.Test
         cp = deepcopy(kf1)
         deleterows!(cp, [1, 10])
         @test cp == KeyedFrame(DataFrame(; a=2:9, b=3:10, c=4:11), [:a, :b])
+
+        # Test return type of `deleterows!`
+        @test isa(deleterows!(deepcopy(kf1), 1), KeyedFrame)
     end
 
     deletecols! = VERSION < v"0.7" ? KeyedFrames.delete! : KeyedFrames.deletecols!
@@ -270,6 +285,9 @@ using Compat.Test
             cp = deepcopy(kf1)
             @test_throws Exception deletecols!(cp, ind)
         end
+
+        # Test return type of `deletecols!`
+        @test isa(deletecols!(deepcopy(kf1), :b), KeyedFrame)
     end
 
     @testset "rename" begin
@@ -308,15 +326,19 @@ using Compat.Test
         expected = KeyedFrame(DataFrame(; a=[1, 2, 3, 1], b=1:4, c=1:4), [:a, :b])
         @test isequal(unique(kf4), expected)
         cp = deepcopy(kf4)
-        unique!(kf4)
-        @test isequal(kf4, expected)
+        unique!(cp)
+        @test isequal(cp, expected)
 
         # Specify columns
         expected = KeyedFrame(DataFrame(; a=1:3, b=1:3, c=1:3), [:a, :b])
         @test isequal(unique(kf4, :a), expected)
         cp = deepcopy(kf4)
-        unique!(kf4, :a)
-        @test isequal(kf4, expected)
+        unique!(cp, :a)
+        @test isequal(cp, expected)
+
+        # Test return type of `unique!`
+        @test isa(unique!(deepcopy(kf1)), KeyedFrame)
+        @test isa(unique!(deepcopy(kf1), :a), KeyedFrame)
     end
 
     @testset "join" begin
@@ -404,5 +426,8 @@ using Compat.Test
 
         @test_throws Exception permutecols!(cp, [1, 3])
         @test_throws Exception permutecols!(cp, [1, 2, 3, 4])
+
+        # Test return type of `permutecols!`
+        @test isa(permutecols!(deepcopy(kf1), [1, 2, 3]), KeyedFrame)
     end
 end
