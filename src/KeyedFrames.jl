@@ -159,10 +159,20 @@ end
 
 ##### PUSH/APPEND/DELETE #####
 
-Base.push!(kf::KeyedFrame, data) = push!(frame(kf), data)
-Base.append!(kf::KeyedFrame, data) = append!(frame(kf), data)
+function Base.push!(kf::KeyedFrame, data)
+    push!(frame(kf), data)
+    return kf
+end
 
-deleterows!(kf::KeyedFrame, ind) = deleterows!(frame(kf), ind)
+function Base.append!(kf::KeyedFrame, data)
+    append!(frame(kf), data)
+    return kf
+end
+
+function deleterows!(kf::KeyedFrame, ind)
+    deleterows!(frame(kf), ind)
+    return kf
+end
 
 deletecols!(kf::KeyedFrame, ind::Union{Integer, Symbol}) = deletecols!(kf, [ind])
 deletecols!(kf::KeyedFrame, ind::Vector{<:Integer}) = deletecols!(kf, names(kf)[ind])
@@ -208,8 +218,10 @@ end
 
 Base.unique(kf::KeyedFrame, cols::AbstractVector) = _unique(kf, cols)
 Base.unique(kf::KeyedFrame, cols::Union{Integer, Symbol, Colon}) = _unique(kf, cols)
+Base.unique(kf::KeyedFrame) = _unique(kf, keys(kf))
 unique!(kf::KeyedFrame, cols::Union{Integer, Symbol, Colon}) = _unique!(kf, cols)
 unique!(kf::KeyedFrame, cols::AbstractVector) = _unique!(kf, cols)
+unique!(kf::KeyedFrame) = _unique!(kf, keys(kf))
 
 nonunique(kf::KeyedFrame) = nonunique(frame(kf), keys(kf))
 
@@ -270,9 +282,15 @@ if VERSION < v"0.7"
         ))
     end
 
-    Base.permute!(kf::KeyedFrame, index::AbstractVector) = permute!(frame(kf), index)
+    function Base.permute!(kf::KeyedFrame, index::AbstractVector)
+        permute!(frame(kf), index)
+        return kf
+    end
 else
-    permutecols!(kf::KeyedFrame, index::AbstractVector) = permutecols!(frame(kf), index)
+    function permutecols!(kf::KeyedFrame, index::AbstractVector)
+        permutecols!(frame(kf), index)
+        return kf
+    end
 end
 
 export KeyedFrame
