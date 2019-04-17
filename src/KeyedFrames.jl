@@ -1,6 +1,5 @@
 __precompile__()
 module KeyedFrames
-using Compat: findfirst, Nothing
 using DataFrames
 import DataFrames: SubDataFrame, nrow, ncol, index, deleterows!, rename!, rename,
        unique!, nonunique
@@ -104,7 +103,7 @@ Base.setindex!(kf::KeyedFrame, value, ind...) = setindex!(frame(kf), value, ind.
 function _kf_getindex(kf::KeyedFrame, index...)
     # If indexing by column, some keys might be removed.
     df = getindex(frame(kf), index...)
-    return KeyedFrame(df, intersect(names(df), keys(kf)))
+    return KeyedFrame(DataFrame(df), intersect(names(df), keys(kf)))
 end
 
 # Returns a KeyedFrame
@@ -121,10 +120,10 @@ Base.getindex(kf::KeyedFrame, col::ColumnIndex) = frame(kf)[col]
 Base.getindex(kf::KeyedFrame, ::Colon, col) = kf[col]
 
 # Returns a scalar
-Base.getindex(kf::KeyedFrame, row::Real, col::ColumnIndex) = frame(kf)[row, col]
+Base.getindex(kf::KeyedFrame, row::Integer, col::ColumnIndex) = frame(kf)[row, col]
 
 # Returns a KeyedFrame
-Base.getindex(kf::KeyedFrame, row::Real, col::AbstractVector) = _kf_getindex(kf, row, col)
+Base.getindex(kf::KeyedFrame, row::Integer, col::AbstractVector) = _kf_getindex(kf, row, col)
 
 # Returns a column
 Base.getindex(kf::KeyedFrame, row::AbstractVector, col::ColumnIndex) = frame(kf)[row, col]
@@ -140,7 +139,7 @@ function Base.getindex(kf::KeyedFrame, row::AbstractVector, col::Colon)
 end
 
 # Returns a KeyedFrame
-Base.getindex(kf::KeyedFrame, row::Real, col::Colon) = kf[[row], col]
+Base.getindex(kf::KeyedFrame, row::Integer, col::Colon) = kf[[row], col]
 
 ##### SORTING #####
 

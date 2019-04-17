@@ -1,7 +1,6 @@
 using KeyedFrames
 using DataFrames
-using Compat: nameof
-using Compat.Test
+using Test
 
 @testset "KeyedFrames" begin
     df1 = DataFrame(; a=1:10, b=2:11, c=3:12)
@@ -77,7 +76,7 @@ using Compat.Test
         for (kf, df) in [(kf1, df1), (kf2, df2), (kf3, df3)]
             @test convert(DataFrame, kf) == df
             @test DataFrame(kf) == df
-            @test SubDataFrame(kf, 1:3) == SubDataFrame(df, 1:3)
+            @test SubDataFrame(kf, 1:3, :) == SubDataFrame(df, 1:3, :)
         end
     end
 
