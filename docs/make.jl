@@ -2,7 +2,7 @@ using Documenter, KeyedFrames
 
 makedocs(;
     modules=[KeyedFrames],
-    format=:html,
+    format=Documenter.HTML(prettyurls=(get(ENV, "CI", nothing)=="true")),
     pages=[
         "Home" => "index.md",
     ],
@@ -18,7 +18,4 @@ makedocs(;
 deploydocs(;
     repo="github.com/invenia/KeyedFrames.jl",
     target="build",
-    julia="0.6",
-    deps=nothing,
-    make=nothing,
 )
