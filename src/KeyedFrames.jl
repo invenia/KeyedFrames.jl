@@ -1,14 +1,10 @@
 __precompile__()
 module KeyedFrames
-using DataFrames
-import DataFrames: SubDataFrame, nrow, ncol, index, deleterows!, rename!, rename,
-       unique!, nonunique
 
-if VERSION < v"0.7"
-    import DataFrames: delete!, head, tail
-else
-    import DataFrames: deletecols!, first, last, permutecols!
-end
+using DataFrames
+
+import DataFrames: deletecols!, deleterows!, first, index, last, ncol, nonunique, nrow,
+    permutecols!, rename, rename!, SubDataFrame, unique!
 
 struct KeyedFrame <: AbstractDataFrame
     frame::DataFrame
@@ -177,13 +173,9 @@ deletecols!(kf::KeyedFrame, ind::Union{Integer, Symbol}) = deletecols!(kf, [ind]
 deletecols!(kf::KeyedFrame, ind::Vector{<:Integer}) = deletecols!(kf, names(kf)[ind])
 
 function deletecols!(kf::KeyedFrame, ind::Vector{<:Symbol})
-    @static VERSION < v"0.7" ? delete!(frame(kf), ind) : deletecols!(frame(kf), ind)
+    deletecols!(frame(kf), ind)
     filter!(x -> !in(x, ind), keys(kf))
     return kf
-end
-
-if VERSION < v"0.7"
-    delete!(kf::KeyedFrame, ind) = deletecols!(kf, ind)
 end
 
 ##### RENAME #####
@@ -261,35 +253,14 @@ end
 
 ##### FIRST/LAST #####
 
-if VERSION < v"0.7"
-    head(kf::KeyedFrame, r::Int) = KeyedFrame(head(frame(kf), r), keys(kf))
-    tail(kf::KeyedFrame, r::Int) = KeyedFrame(tail(frame(kf), r), keys(kf))
-else
-    first(kf::KeyedFrame, r::Int) = KeyedFrame(first(frame(kf), r), keys(kf))
-    last(kf::KeyedFrame, r::Int) = KeyedFrame(last(frame(kf), r), keys(kf))
-end
+first(kf::KeyedFrame, r::Int) = KeyedFrame(first(frame(kf), r), keys(kf))
+last(kf::KeyedFrame, r::Int) = KeyedFrame(last(frame(kf), r), keys(kf))
 
 ##### PERMUTE #####
 
-
-if VERSION < v"0.7"
-    function Base.permute!(df::DataFrame, index::AbstractVector)
-        permute!(DataFrames.columns(df), index)
-        setfield!(df, :colindex, DataFrames.Index(
-            Dict(names(df)[j] => i for (i, j) in enumerate(index)),
-            [names(df)[j] for j in index]
-        ))
-    end
-
-    function Base.permute!(kf::KeyedFrame, index::AbstractVector)
-        permute!(frame(kf), index)
-        return kf
-    end
-else
-    function permutecols!(kf::KeyedFrame, index::AbstractVector)
-        permutecols!(frame(kf), index)
-        return kf
-    end
+function permutecols!(kf::KeyedFrame, index::AbstractVector)
+    permutecols!(frame(kf), index)
+    return kf
 end
 
 export KeyedFrame
