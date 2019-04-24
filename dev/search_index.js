@@ -1,7 +1,7 @@
 var documenterSearchIndex = {"docs": [
 
 {
-    "location": "index.html#",
+    "location": "#",
     "page": "Home",
     "title": "Home",
     "category": "page",
@@ -9,7 +9,7 @@ var documenterSearchIndex = {"docs": [
 },
 
 {
-    "location": "index.html#KeyedFrames-1",
+    "location": "#KeyedFrames-1",
     "page": "Home",
     "title": "KeyedFrames",
     "category": "section",
@@ -17,7 +17,7 @@ var documenterSearchIndex = {"docs": [
 },
 
 {
-    "location": "index.html#Constructor-1",
+    "location": "#Constructor-1",
     "page": "Home",
     "title": "Constructor",
     "category": "section",
@@ -25,7 +25,7 @@ var documenterSearchIndex = {"docs": [
 },
 
 {
-    "location": "index.html#Example-1",
+    "location": "#Example-1",
     "page": "Home",
     "title": "Example",
     "category": "section",
@@ -33,7 +33,7 @@ var documenterSearchIndex = {"docs": [
 },
 
 {
-    "location": "index.html#Joining-1",
+    "location": "#Joining-1",
     "page": "Home",
     "title": "Joining",
     "category": "section",
@@ -41,7 +41,7 @@ var documenterSearchIndex = {"docs": [
 },
 
 {
-    "location": "index.html#Example-2",
+    "location": "#Example-2",
     "page": "Home",
     "title": "Example",
     "category": "section",
@@ -49,7 +49,7 @@ var documenterSearchIndex = {"docs": [
 },
 
 {
-    "location": "index.html#Deduplication-1",
+    "location": "#Deduplication-1",
     "page": "Home",
     "title": "Deduplication",
     "category": "section",
@@ -57,7 +57,7 @@ var documenterSearchIndex = {"docs": [
 },
 
 {
-    "location": "index.html#Example-3",
+    "location": "#Example-3",
     "page": "Home",
     "title": "Example",
     "category": "section",
@@ -65,7 +65,7 @@ var documenterSearchIndex = {"docs": [
 },
 
 {
-    "location": "index.html#Sorting-1",
+    "location": "#Sorting-1",
     "page": "Home",
     "title": "Sorting",
     "category": "section",
@@ -73,7 +73,7 @@ var documenterSearchIndex = {"docs": [
 },
 
 {
-    "location": "index.html#Equality-1",
+    "location": "#Equality-1",
     "page": "Home",
     "title": "Equality",
     "category": "section",
