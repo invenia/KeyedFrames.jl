@@ -1,7 +1,6 @@
 using KeyedFrames
 using DataFrames
-using Compat: nameof
-using Compat.Test
+using Test
 
 @testset "KeyedFrames" begin
     df1 = DataFrame(; a=1:10, b=2:11, c=3:12)
@@ -77,7 +76,7 @@ using Compat.Test
         for (kf, df) in [(kf1, df1), (kf2, df2), (kf3, df3)]
             @test convert(DataFrame, kf) == df
             @test DataFrame(kf) == df
-            @test SubDataFrame(kf, 1:3) == SubDataFrame(df, 1:3)
+            @test SubDataFrame(kf, 1:3, :) == SubDataFrame(df, 1:3, :)
         end
     end
 
@@ -158,8 +157,6 @@ using Compat.Test
         @test isequal(cp, KeyedFrame(DataFrame(;a=[10, 2, 3, 4, 5],d=[10, 5, 6, 7, 8]), :a))
     end
 
-    first = VERSION < v"0.7" ? KeyedFrames.head : KeyedFrames.first
-    last = VERSION < v"0.7" ? KeyedFrames.tail : KeyedFrames.last
     @testset "first/last" begin
         # Don't assume that n will always equal 6
         @test first(kf1) isa KeyedFrame
@@ -263,8 +260,7 @@ using Compat.Test
         # Test return type of `deleterows!`
         @test isa(deleterows!(deepcopy(kf1), 1), KeyedFrame)
     end
-
-    deletecols! = VERSION < v"0.7" ? KeyedFrames.delete! : KeyedFrames.deletecols!
+    
     @testset "deletecols!" begin
         for ind in (:b, 2, [:b], [2])
             cp = deepcopy(kf1)
@@ -415,7 +411,6 @@ using Compat.Test
         @test isequal(join(kf2, kf3; on=[:a => :a, :d => :e], kind=:outer), expected)
     end
 
-    permutecols! = VERSION < v"0.7" ? KeyedFrames.permute! : KeyedFrames.permutecols!
     @testset "permutecols!" begin
         cp = deepcopy(kf1)
         permutecols!(cp, [1, 3, 2])
