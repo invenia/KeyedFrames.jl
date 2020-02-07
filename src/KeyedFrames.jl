@@ -3,7 +3,7 @@ module KeyedFrames
 using DataFrames
 
 import DataFrames: deletecols!, deleterows!, first, index, last, ncol, nonunique, nrow,
-    permutecols!, rename, rename!, SubDataFrame, unique!
+    permutecols!, rename, rename!, SubDataFrame, unique!, DataFrameRow, select!, _check_consistency
 
 struct KeyedFrame <: AbstractDataFrame
     frame::DataFrame
@@ -65,6 +65,9 @@ Base.deepcopy(kf::KeyedFrame) = KeyedFrame(deepcopy(DataFrame(kf)), deepcopy(key
 Base.convert(::Type{DataFrame}, kf::KeyedFrame) = frame(kf)
 
 SubDataFrame(kf::KeyedFrame, args...) = SubDataFrame(frame(kf), args...)
+DataFrameRow(kf::KeyedFrame, args...) = DataFrameRow(frame(kf), args...)
+
+_check_consistency(kf::KeyedFrame) = _check_consistency(frame(kf))
 
 ##### EQUALITY #####
 
@@ -97,7 +100,7 @@ Base.setindex!(kf::KeyedFrame, value, ind...) = setindex!(frame(kf), value, ind.
 # I don't want to have to write the same function body several times, so...
 function _kf_getindex(kf::KeyedFrame, index...)
     # If indexing by column, some keys might be removed.
-    df = getindex(frame(kf), index...)
+    df = frame(kf)[index...]
     return KeyedFrame(DataFrame(df), intersect(names(df), keys(kf)))
 end
 
@@ -106,13 +109,13 @@ Base.getindex(kf::KeyedFrame, ::Colon) = copy(kf)
 Base.getindex(kf::KeyedFrame, ::Colon, ::Colon) = copy(kf)
 
 # Returns a KeyedFrame
-Base.getindex(kf::KeyedFrame, col::AbstractVector) = _kf_getindex(kf, col)
+Base.getindex(kf::KeyedFrame, ::typeof(!), col::AbstractVector) = _kf_getindex(kf, !, col)
 
 # Returns a column
-Base.getindex(kf::KeyedFrame, col::ColumnIndex) = frame(kf)[col]
+Base.getindex(kf::KeyedFrame, ::typeof(!), col::ColumnIndex) = frame(kf)[!, col]
 
 # Returns a KeyedFrame or a column (depending on the type of col)
-Base.getindex(kf::KeyedFrame, ::Colon, col) = kf[col]
+Base.getindex(kf::KeyedFrame, ::Colon, col) = kf[!, col]
 
 # Returns a scalar
 Base.getindex(kf::KeyedFrame, row::Integer, col::ColumnIndex) = frame(kf)[row, col]
@@ -172,14 +175,14 @@ deletecols!(kf::KeyedFrame, ind::Union{Integer, Symbol}) = deletecols!(kf, [ind]
 deletecols!(kf::KeyedFrame, ind::Vector{<:Integer}) = deletecols!(kf, names(kf)[ind])
 
 function deletecols!(kf::KeyedFrame, ind::Vector{<:Symbol})
-    deletecols!(frame(kf), ind)
+    select!(frame(kf), Not(ind))
     filter!(x -> !in(x, ind), keys(kf))
     return kf
 end
 
 ##### RENAME #####
 
-function rename!(kf::KeyedFrame, nms)
+function rename!(kf::KeyedFrame, nms::AbstractVector{Pair{Symbol,Symbol}})
     rename!(frame(kf), nms)
 
     for (from, to) in nms
@@ -193,6 +196,7 @@ function rename!(kf::KeyedFrame, nms)
 end
 
 rename!(kf::KeyedFrame, nms::Pair{Symbol, Symbol}...) = rename!(kf, collect(nms))
+rename!(kf::KeyedFrame, nms::Dict{Symbol, Symbol}) = rename!(kf, collect(pairs(nms)))
 rename!(f::Function, kf::KeyedFrame) = rename!(kf, [(nm => f(nm)) for nm in names(kf)])
 
 rename(kf::KeyedFrame, args...) = rename!(copy(kf), args...)
@@ -214,6 +218,7 @@ unique!(kf::KeyedFrame, cols::AbstractVector) = _unique!(kf, cols)
 unique!(kf::KeyedFrame) = _unique!(kf, keys(kf))
 
 nonunique(kf::KeyedFrame) = nonunique(frame(kf), keys(kf))
+nonunique(kf::KeyedFrame, cols) = nonunique(frame(kf), cols)
 
 ##### JOIN #####
 
@@ -258,7 +263,7 @@ last(kf::KeyedFrame, r::Int) = KeyedFrame(last(frame(kf), r), keys(kf))
 ##### PERMUTE #####
 
 function permutecols!(kf::KeyedFrame, index::AbstractVector)
-    permutecols!(frame(kf), index)
+    select!(frame(kf), index)
     return kf
 end
 
