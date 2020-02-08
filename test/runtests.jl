@@ -109,15 +109,15 @@ using Test
         @test isequal(kf1[1, [:a, :b]], KeyedFrame(DataFrame(; a=1, b=2), [:a, :b]))
         @test isequal(kf1[8:10, 1:2], KeyedFrame(DataFrame(; a=8:10, b=9:11), [:a, :b]))
 
-        @test isequal(kf1[:, 1:2], KeyedFrame(DataFrame(; a=1:10, b=2:11), [:a, :b]))
-        @test isequal(kf1[:, [:a, :b]], KeyedFrame(DataFrame(; a=1:10, b=2:11), [:a, :b]))
+        @test kf1[:, 1:2] == KeyedFrame(DataFrame(; a=1:10, b=2:11), [:a, :b])
+        @test kf1[:, [:a, :b]] == KeyedFrame(DataFrame(; a=1:10, b=2:11), [:a, :b])
 
         # When :a column disappears it is removed from the key
         @test isequal(kf1[!, 2:3], KeyedFrame(DataFrame(; b=2:11, c=3:12), :b))
         @test isequal(kf1[!, [:b, :c]], KeyedFrame(DataFrame(; b=2:11, c=3:12), :b))
 
-        @test isequal(kf1[:, 2:3], KeyedFrame(DataFrame(; b=2:11, c=3:12), :b))
-        @test isequal(kf1[:, [:b, :c]], KeyedFrame(DataFrame(; b=2:11, c=3:12), :b))
+        @test kf1[:, 2:3] == KeyedFrame(DataFrame(; b=2:11, c=3:12), :b)
+        @test kf1[:, [:b, :c]] == KeyedFrame(DataFrame(; b=2:11, c=3:12), :b)
 
         # Returns a column/value instead of a KeyedFrame
         @test isequal(kf1[1, :a], 1)

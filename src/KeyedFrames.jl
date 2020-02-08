@@ -118,7 +118,7 @@ Base.getindex(kf::KeyedFrame, ::typeof(!), col::AbstractVector) = _kf_getindex(k
 Base.getindex(kf::KeyedFrame, ::typeof(!), col::ColumnIndex) = frame(kf)[!, col]
 
 # Returns a KeyedFrame or a column (depending on the type of col)
-Base.getindex(kf::KeyedFrame, ::Colon, col) = kf[!, col]
+Base.getindex(kf::KeyedFrame, ::Colon, col) = frame(kf)[:, col]
 
 # Returns a scalar
 Base.getindex(kf::KeyedFrame, row::Integer, col::ColumnIndex) = frame(kf)[row, col]
