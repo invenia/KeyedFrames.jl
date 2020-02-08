@@ -261,29 +261,29 @@ using Test
         @test isa(deleterows!(deepcopy(kf1), 1), KeyedFrame)
     end
 
-    @testset "deletecols!" begin
+    @testset "select!" begin
         for ind in (:b, 2, [:b], [2])
             cp = deepcopy(kf1)
-            deletecols!(cp, ind)
+            select!(cp, ind)
             @test cp == KeyedFrame(DataFrame(; a=1:10, c=3:12), [:a])
         end
         for ind in ([:a, :c], [1, 3])
             cp = deepcopy(kf1)
-            deletecols!(cp, ind)
+            select!(cp, ind)
             @test cp == KeyedFrame(DataFrame(; b=2:11), [:b])
         end
         for ind in ([:a, :b], [1, 2])
             cp = deepcopy(kf1)
-            deletecols!(cp, ind)
+            select!(cp, ind)
             @test cp == KeyedFrame(DataFrame(; c=3:12), Symbol[])
         end
         for ind in (:d, 4, [:a, :d], [1, 4])
             cp = deepcopy(kf1)
-            @test_throws Exception deletecols!(cp, ind)
+            @test_throws Exception select!(cp, ind)
         end
 
-        # Test return type of `deletecols!`
-        @test isa(deletecols!(deepcopy(kf1), :b), KeyedFrame)
+        # Test return type of `select!`
+        @test isa(select!(deepcopy(kf1), :b), KeyedFrame)
     end
 
     @testset "rename" begin
@@ -422,5 +422,10 @@ using Test
 
         # Test return type of `permutecols!`
         @test isa(permutecols!(deepcopy(kf1), [1, 2, 3]), KeyedFrame)
+    end
+
+    @testset "deprecated" begin
+        cp = deepcopy(kf1)
+        @test_deprecated deletecols!(cp, :b)
     end
 end

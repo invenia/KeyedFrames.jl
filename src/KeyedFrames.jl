@@ -1,9 +1,12 @@
 module KeyedFrames
 
-using DataFrames
+import Base: @deprecate
+import DataFrames: _check_consistency, deletecols!
 
-import DataFrames: deletecols!, deleterows!, first, index, last, ncol, nonunique, nrow,
-    permutecols!, rename, rename!, SubDataFrame, unique!, DataFrameRow, select!, _check_consistency
+using DataFrames
+using DataFrames: DataFrameRow, SubDataFrame
+using DataFrames: deleterows!, first, index, last, ncol, nonunique, nrow, permutecols!,
+    rename, rename!, select!, unique!
 
 struct KeyedFrame <: AbstractDataFrame
     frame::DataFrame
@@ -58,14 +61,14 @@ by virtue of having the columns listed in a different order in their `key`s.
 """
 KeyedFrame
 
-DataFrame(kf::KeyedFrame) = frame(kf)
+DataFrames.DataFrame(kf::KeyedFrame) = frame(kf)
 Base.copy(kf::KeyedFrame) = KeyedFrame(copy(DataFrame(kf)), copy(keys(kf)))
 Base.deepcopy(kf::KeyedFrame) = KeyedFrame(deepcopy(DataFrame(kf)), deepcopy(keys(kf)))
 
 Base.convert(::Type{DataFrame}, kf::KeyedFrame) = frame(kf)
 
-SubDataFrame(kf::KeyedFrame, args...) = SubDataFrame(frame(kf), args...)
-DataFrameRow(kf::KeyedFrame, args...) = DataFrameRow(frame(kf), args...)
+DataFrames.SubDataFrame(kf::KeyedFrame, args...) = SubDataFrame(frame(kf), args...)
+DataFrames.DataFrameRow(kf::KeyedFrame, args...) = DataFrameRow(frame(kf), args...)
 
 _check_consistency(kf::KeyedFrame) = _check_consistency(frame(kf))
 
@@ -81,12 +84,12 @@ Base.hash(kf::KeyedFrame, h::UInt) = hash(keys(kf), hash(frame(kf), h))
 
 ##### SIZE #####
 
-nrow(kf::KeyedFrame) = nrow(frame(kf))
-ncol(kf::KeyedFrame) = ncol(frame(kf))
+DataFrames.nrow(kf::KeyedFrame) = nrow(frame(kf))
+DataFrames.ncol(kf::KeyedFrame) = ncol(frame(kf))
 
 ##### ACCESSORS #####
 
-index(kf::KeyedFrame) = index(frame(kf))
+DataFrames.index(kf::KeyedFrame) = index(frame(kf))
 Base.names(kf::KeyedFrame) = names(frame(kf))
 
 ##### INDEXING #####
@@ -166,15 +169,17 @@ function Base.append!(kf::KeyedFrame, data)
     return kf
 end
 
-function deleterows!(kf::KeyedFrame, ind)
+function DataFrames.deleterows!(kf::KeyedFrame, ind)
     deleterows!(frame(kf), ind)
     return kf
 end
 
-deletecols!(kf::KeyedFrame, ind::Union{Integer, Symbol}) = deletecols!(kf, [ind])
-deletecols!(kf::KeyedFrame, ind::Vector{<:Integer}) = deletecols!(kf, names(kf)[ind])
+@deprecate deletecols!(kf::KeyedFrame, ind) select!(kf, ind)
 
-function deletecols!(kf::KeyedFrame, ind::Vector{<:Symbol})
+DataFrames.select!(kf::KeyedFrame, ind::Union{Integer, Symbol}) = select!(kf, [ind])
+DataFrames.select!(kf::KeyedFrame, ind::Vector{<:Integer}) = select!(kf, names(kf)[ind])
+
+function DataFrames.select!(kf::KeyedFrame, ind::Vector{<:Symbol})
     select!(frame(kf), Not(ind))
     filter!(x -> !in(x, ind), keys(kf))
     return kf
@@ -182,7 +187,7 @@ end
 
 ##### RENAME #####
 
-function rename!(kf::KeyedFrame, nms::AbstractVector{Pair{Symbol,Symbol}})
+function DataFrames.rename!(kf::KeyedFrame, nms::AbstractVector{Pair{Symbol,Symbol}})
     rename!(frame(kf), nms)
 
     for (from, to) in nms
@@ -195,12 +200,12 @@ function rename!(kf::KeyedFrame, nms::AbstractVector{Pair{Symbol,Symbol}})
     return kf
 end
 
-rename!(kf::KeyedFrame, nms::Pair{Symbol, Symbol}...) = rename!(kf, collect(nms))
-rename!(kf::KeyedFrame, nms::Dict{Symbol, Symbol}) = rename!(kf, collect(pairs(nms)))
-rename!(f::Function, kf::KeyedFrame) = rename!(kf, [(nm => f(nm)) for nm in names(kf)])
+DataFrames.rename!(kf::KeyedFrame, nms::Pair{Symbol, Symbol}...) = rename!(kf, collect(nms))
+DataFrames.rename!(kf::KeyedFrame, nms::Dict{Symbol, Symbol}) = rename!(kf, collect(pairs(nms)))
+DataFrames.rename!(f::Function, kf::KeyedFrame) = rename!(kf, [(nm => f(nm)) for nm in names(kf)])
 
-rename(kf::KeyedFrame, args...) = rename!(copy(kf), args...)
-rename(f::Function, kf::KeyedFrame) = rename!(f, copy(kf))
+DataFrames.rename(kf::KeyedFrame, args...) = rename!(copy(kf), args...)
+DataFrames.rename(f::Function, kf::KeyedFrame) = rename!(f, copy(kf))
 
 ##### UNIQUE #####
 
@@ -213,12 +218,12 @@ end
 Base.unique(kf::KeyedFrame, cols::AbstractVector) = _unique(kf, cols)
 Base.unique(kf::KeyedFrame, cols::Union{Integer, Symbol, Colon}) = _unique(kf, cols)
 Base.unique(kf::KeyedFrame) = _unique(kf, keys(kf))
-unique!(kf::KeyedFrame, cols::Union{Integer, Symbol, Colon}) = _unique!(kf, cols)
-unique!(kf::KeyedFrame, cols::AbstractVector) = _unique!(kf, cols)
-unique!(kf::KeyedFrame) = _unique!(kf, keys(kf))
+DataFrames.unique!(kf::KeyedFrame, cols::Union{Integer, Symbol, Colon}) = _unique!(kf, cols)
+DataFrames.unique!(kf::KeyedFrame, cols::AbstractVector) = _unique!(kf, cols)
+DataFrames.unique!(kf::KeyedFrame) = _unique!(kf, keys(kf))
 
-nonunique(kf::KeyedFrame) = nonunique(frame(kf), keys(kf))
-nonunique(kf::KeyedFrame, cols) = nonunique(frame(kf), cols)
+DataFrames.nonunique(kf::KeyedFrame) = nonunique(frame(kf), keys(kf))
+DataFrames.nonunique(kf::KeyedFrame, cols) = nonunique(frame(kf), cols)
 
 ##### JOIN #####
 
@@ -257,12 +262,12 @@ end
 
 ##### FIRST/LAST #####
 
-first(kf::KeyedFrame, r::Int) = KeyedFrame(first(frame(kf), r), keys(kf))
-last(kf::KeyedFrame, r::Int) = KeyedFrame(last(frame(kf), r), keys(kf))
+DataFrames.first(kf::KeyedFrame, r::Int) = KeyedFrame(first(frame(kf), r), keys(kf))
+DataFrames.last(kf::KeyedFrame, r::Int) = KeyedFrame(last(frame(kf), r), keys(kf))
 
 ##### PERMUTE #####
 
-function permutecols!(kf::KeyedFrame, index::AbstractVector)
+function DataFrames.permutecols!(kf::KeyedFrame, index::AbstractVector)
     select!(frame(kf), index)
     return kf
 end
