@@ -103,21 +103,21 @@ using Test
         @test isequal(kf1[1, :], KeyedFrame(DataFrame(; a=1, b=2, c=3), [:a, :b]))
         @test isequal(kf1[8:10, :], KeyedFrame(DataFrame(; a=8:10, b=9:11, c=10:12), [:a, :b]))
 
-        @test isequal(kf1[1:2], KeyedFrame(DataFrame(; a=1:10, b=2:11), [:a, :b]))
-        @test isequal(kf1[[:a, :b]], KeyedFrame(DataFrame(; a=1:10, b=2:11), [:a, :b]))
+        @test isequal(kf1[!, 1:2], KeyedFrame(DataFrame(; a=1:10, b=2:11), [:a, :b]))
+        @test isequal(kf1[!, [:a, :b]], KeyedFrame(DataFrame(; a=1:10, b=2:11), [:a, :b]))
 
         @test isequal(kf1[1, [:a, :b]], KeyedFrame(DataFrame(; a=1, b=2), [:a, :b]))
         @test isequal(kf1[8:10, 1:2], KeyedFrame(DataFrame(; a=8:10, b=9:11), [:a, :b]))
 
-        @test isequal(kf1[:, 1:2], KeyedFrame(DataFrame(; a=1:10, b=2:11), [:a, :b]))
-        @test isequal(kf1[:, [:a, :b]], KeyedFrame(DataFrame(; a=1:10, b=2:11), [:a, :b]))
+        @test kf1[:, 1:2] == KeyedFrame(DataFrame(; a=1:10, b=2:11), [:a, :b])
+        @test kf1[:, [:a, :b]] == KeyedFrame(DataFrame(; a=1:10, b=2:11), [:a, :b])
 
         # When :a column disappears it is removed from the key
-        @test isequal(kf1[2:3], KeyedFrame(DataFrame(; b=2:11, c=3:12), :b))
-        @test isequal(kf1[[:b, :c]], KeyedFrame(DataFrame(; b=2:11, c=3:12), :b))
+        @test isequal(kf1[!, 2:3], KeyedFrame(DataFrame(; b=2:11, c=3:12), :b))
+        @test isequal(kf1[!, [:b, :c]], KeyedFrame(DataFrame(; b=2:11, c=3:12), :b))
 
-        @test isequal(kf1[:, 2:3], KeyedFrame(DataFrame(; b=2:11, c=3:12), :b))
-        @test isequal(kf1[:, [:b, :c]], KeyedFrame(DataFrame(; b=2:11, c=3:12), :b))
+        @test kf1[:, 2:3] == KeyedFrame(DataFrame(; b=2:11, c=3:12), :b)
+        @test kf1[:, [:b, :c]] == KeyedFrame(DataFrame(; b=2:11, c=3:12), :b)
 
         # Returns a column/value instead of a KeyedFrame
         @test isequal(kf1[1, :a], 1)
@@ -129,23 +129,23 @@ using Test
 
     @testset "setindex!" begin
         cp = deepcopy(kf1)
-        cp[:b] = collect(11:20)     # Need to collect on a setindex! with DataFrames.
+        cp[!, :b] = collect(11:20)     # Need to collect on a setindex! with DataFrames.
         @test isequal(cp, KeyedFrame(DataFrame(; a=1:10, b=11:20, c=3:12), [:a, :b]))
 
         cp = deepcopy(kf1)
-        cp[:b] = 3
+        cp[!, :b] .= 3
         @test isequal(cp, KeyedFrame(DataFrame(; a=1:10, b=3, c=3:12), [:a, :b]))
 
         cp = deepcopy(kf1)
-        cp[2] = 3
+        cp[!, 2] .= 3
         @test isequal(cp, KeyedFrame(DataFrame(; a=1:10, b=3, c=3:12), [:a, :b]))
 
         cp = deepcopy(kf1)
-        cp[[:b, :c]] = 3
+        cp[!, [:b, :c]] .= 3
         @test isequal(cp, KeyedFrame(DataFrame(; a=1:10, b=3, c=3), [:a, :b]))
 
         cp = deepcopy(kf1)
-        cp[2:3] = 3
+        cp[!, 2:3] .= 3
         @test isequal(cp, KeyedFrame(DataFrame(; a=1:10, b=3, c=3), [:a, :b]))
 
         cp = deepcopy(kf2)
@@ -153,7 +153,7 @@ using Test
         @test isequal(cp, KeyedFrame(DataFrame(; a=1:5, d=[10, 5, 6, 7, 8]), :a))
 
         cp = deepcopy(kf2)
-        cp[1, 1:2] = 10
+        cp[1, 1:2] .= 10
         @test isequal(cp, KeyedFrame(DataFrame(;a=[10, 2, 3, 4, 5],d=[10, 5, 6, 7, 8]), :a))
     end
 
@@ -260,30 +260,30 @@ using Test
         # Test return type of `deleterows!`
         @test isa(deleterows!(deepcopy(kf1), 1), KeyedFrame)
     end
-    
-    @testset "deletecols!" begin
+
+    @testset "select!" begin
         for ind in (:b, 2, [:b], [2])
             cp = deepcopy(kf1)
-            deletecols!(cp, ind)
+            select!(cp, ind)
             @test cp == KeyedFrame(DataFrame(; a=1:10, c=3:12), [:a])
         end
         for ind in ([:a, :c], [1, 3])
             cp = deepcopy(kf1)
-            deletecols!(cp, ind)
+            select!(cp, ind)
             @test cp == KeyedFrame(DataFrame(; b=2:11), [:b])
         end
         for ind in ([:a, :b], [1, 2])
             cp = deepcopy(kf1)
-            deletecols!(cp, ind)
+            select!(cp, ind)
             @test cp == KeyedFrame(DataFrame(; c=3:12), Symbol[])
         end
         for ind in (:d, 4, [:a, :d], [1, 4])
             cp = deepcopy(kf1)
-            @test_throws Exception deletecols!(cp, ind)
+            @test_throws Exception select!(cp, ind)
         end
 
-        # Test return type of `deletecols!`
-        @test isa(deletecols!(deepcopy(kf1), :b), KeyedFrame)
+        # Test return type of `select!`
+        @test isa(select!(deepcopy(kf1), :b), KeyedFrame)
     end
 
     @testset "rename" begin
@@ -414,15 +414,18 @@ using Test
     @testset "permutecols!" begin
         cp = deepcopy(kf1)
         permutecols!(cp, [1, 3, 2])
-
         @test isequal(cp, KeyedFrame(DataFrame(; a=1:10, c=3:12, b=2:11), [:a, :b]))
         permutecols!(cp, [2, 3, 1])
         @test isequal(cp, KeyedFrame(DataFrame(; c=3:12, b=2:11, a=1:10), [:a, :b]))
 
-        @test_throws Exception permutecols!(cp, [1, 3])
         @test_throws Exception permutecols!(cp, [1, 2, 3, 4])
 
         # Test return type of `permutecols!`
         @test isa(permutecols!(deepcopy(kf1), [1, 2, 3]), KeyedFrame)
+    end
+
+    @testset "deprecated" begin
+        cp = deepcopy(kf1)
+        @test_deprecated deletecols!(cp, :b)
     end
 end
