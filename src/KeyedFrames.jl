@@ -6,7 +6,7 @@ import DataFrames: _check_consistency, deletecols!
 using DataFrames
 using DataFrames: DataFrameRow, SubDataFrame
 using DataFrames: deleterows!, first, index, last, ncol, nonunique, nrow, permutecols!,
-    rename, rename!, select!, unique!
+    rename, rename!, select, select!, unique!
 
 struct KeyedFrame <: AbstractDataFrame
     frame::DataFrame
@@ -174,15 +174,23 @@ function DataFrames.deleterows!(kf::KeyedFrame, ind)
     return kf
 end
 
-@deprecate deletecols!(kf::KeyedFrame, ind) select!(kf, ind)
+@deprecate deletecols!(kf::KeyedFrame, ind) select!(kf, Not(ind))
 
-DataFrames.select!(kf::KeyedFrame, ind::Union{Integer, Symbol}) = select!(kf, [ind])
-DataFrames.select!(kf::KeyedFrame, ind::Vector{<:Integer}) = select!(kf, names(kf)[ind])
+DataFrames.select!(kf::KeyedFrame, ind::Integer) = select!(kf, [ind])
+DataFrames.select!(kf::KeyedFrame, ind::Symbol) = select!(kf, index(kf)[ind])
 
-function DataFrames.select!(kf::KeyedFrame, ind::Vector{<:Symbol})
-    select!(frame(kf), Not(ind))
-    filter!(x -> !in(x, ind), keys(kf))
+function DataFrames.select!(kf::KeyedFrame, ind)
+    select!(frame(kf), ind)
+    new_keys = names(frame(kf))
+    filter!(x -> in(x, new_keys), keys(kf))
     return kf
+end
+
+function DataFrames.select(kf::KeyedFrame, ind)
+    new_df = select(frame(kf), ind)
+    df_names = names(new_df)
+    new_keys = filter(x -> in(x, df_names), keys(kf))
+    return KeyedFrame(new_df, new_keys)
 end
 
 ##### RENAME #####
