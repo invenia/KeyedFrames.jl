@@ -174,7 +174,7 @@ function DataFrames.deleterows!(kf::KeyedFrame, ind)
     return kf
 end
 
-@deprecate deletecols!(kf::KeyedFrame, ind) select!(kf, Not(ind))
+@deprecate deletecols!(kf::KeyedFrame, inds) select!(kf, Not(inds))
 
 function DataFrames.select!(kf::KeyedFrame, inds)
     select!(frame(kf), inds)
