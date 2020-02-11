@@ -176,20 +176,17 @@ end
 
 @deprecate deletecols!(kf::KeyedFrame, ind) select!(kf, Not(ind))
 
-DataFrames.select!(kf::KeyedFrame, ind::Integer) = select!(kf, [ind])
-DataFrames.select!(kf::KeyedFrame, ind::Symbol) = select!(kf, index(kf)[ind])
-
-function DataFrames.select!(kf::KeyedFrame, ind)
-    select!(frame(kf), ind)
+function DataFrames.select!(kf::KeyedFrame, inds)
+    select!(frame(kf), inds)
     new_keys = names(frame(kf))
-    filter!(x -> in(x, new_keys), keys(kf))
+    filter!(in(new_keys), keys(kf))
     return kf
 end
 
-function DataFrames.select(kf::KeyedFrame, ind)
-    new_df = select(frame(kf), ind)
+function DataFrames.select(kf::KeyedFrame, inds; copycols::Bool=true)
+    new_df = select(frame(kf), inds; copycols=copycols)
     df_names = names(new_df)
-    new_keys = filter(x -> in(x, df_names), keys(kf))
+    new_keys = filter(in(df_names), keys(kf))
     return KeyedFrame(new_df, new_keys)
 end
 
