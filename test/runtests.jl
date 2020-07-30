@@ -244,21 +244,21 @@ using Test
         )
     end
 
-    @testset "deleterows!" begin
+    @testset "delete!" begin
         cp = deepcopy(kf1)
-        deleterows!(cp, 1)
+        delete!(cp, 1)
         @test cp == KeyedFrame(DataFrame(; a=2:10, b=3:11, c=4:12), [:a, :b])
 
         cp = deepcopy(kf1)
-        deleterows!(cp, 1:4)
+        delete!(cp, 1:4)
         @test cp == KeyedFrame(DataFrame(; a=5:10, b=6:11, c=7:12), [:a, :b])
 
         cp = deepcopy(kf1)
-        deleterows!(cp, [1, 10])
+        delete!(cp, [1, 10])
         @test cp == KeyedFrame(DataFrame(; a=2:9, b=3:10, c=4:11), [:a, :b])
 
-        # Test return type of `deleterows!`
-        @test isa(deleterows!(deepcopy(kf1), 1), KeyedFrame)
+        # Test return type of `delete!`
+        @test delete!(deepcopy(kf1), 1) isa KeyedFrame
     end
 
     @testset "select!" begin

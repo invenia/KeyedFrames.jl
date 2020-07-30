@@ -1,11 +1,11 @@
 module KeyedFrames
 
 import Base: @deprecate
-import DataFrames: deletecols!
+import DataFrames: deletecols!, deleterows!
 
 using DataFrames
 using DataFrames: DataFrameRow, SubDataFrame
-using DataFrames: deleterows!, first, index, last, ncol, nonunique, nrow, permutecols!,
+using DataFrames: delete!, first, index, last, ncol, nonunique, nrow, permutecols!,
     rename, rename!, select, select!, unique!
 
 struct KeyedFrame <: AbstractDataFrame
@@ -171,11 +171,12 @@ function Base.append!(kf::KeyedFrame, data)
     return kf
 end
 
-function DataFrames.deleterows!(kf::KeyedFrame, ind)
-    deleterows!(frame(kf), ind)
+function DataFrames.delete!(kf::KeyedFrame, inds)
+    delete!(frame(kf), inds)
     return kf
 end
 
+@deprecate deleterows!(kf::KeyedFrame, inds) delete!(kf, inds)
 @deprecate deletecols!(kf::KeyedFrame, inds) select!(kf, Not(inds))
 
 function DataFrames.select!(kf::KeyedFrame, inds)
