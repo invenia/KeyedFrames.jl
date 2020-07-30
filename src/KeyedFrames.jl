@@ -233,39 +233,118 @@ DataFrames.unique!(kf::KeyedFrame) = _unique!(kf, keys(kf))
 DataFrames.nonunique(kf::KeyedFrame) = nonunique(frame(kf), keys(kf))
 DataFrames.nonunique(kf::KeyedFrame, cols) = nonunique(frame(kf), cols)
 
-##### JOIN #####
+##### JOINING #####
 
-# Returns a KeyedFrame
-function Base.join(a::KeyedFrame, b::KeyedFrame; on=nothing, kind=:inner, kwargs...)
-    df = join(
-        frame(a),
-        frame(b);
-        on=on === nothing ? intersect(keys(a), keys(b)) : on,
-        kind=kind,
-        kwargs...,
-    )
+for j in (:innerjoin, :leftjoin, :rightjoin, :outerjoin, :semijoin, :antijoin, :crossjoin)
 
-    if kind in (:semi, :anti)
-        key = intersect(keys(a), propertynames(df))
-    else
-        # A join can sometimes rename columns, meaning some of the key columns "disappear"
-        key = intersect(union(keys(a), keys(b)), propertynames(df))
+    # Note: We could probably support joining more than two DataFrames but it becomes
+    # tricker with what key to use with multiple KeyedFrames.
+
+    @eval begin
+        # Returns a KeyedFrame
+        function DataFrames.$j(
+            kf1::KeyedFrame,
+            kf2::KeyedFrame;
+            on=nothing,
+            kwargs...,
+        )
+            if on === nothing
+                on = intersect(keys(kf1), keys(kf2))
+            end
+
+            result = $j(
+                frame(kf1),
+                frame(kf2);
+                on=on,
+                kwargs...,
+            )
+
+            key = $(if j in (:semijoin, :antijoin)
+                :(intersect(keys(kf1), propertynames(result)))
+            else
+                # A join can sometimes rename columns, meaning some of the key columns "disappear"
+                :(intersect(union(keys(kf1), keys(kf2)), propertynames(result)))
+            end)
+
+            return KeyedFrame(result, key)
+        end
+
+        # Returns a KeyedFrame
+        function DataFrames.$j(
+            kf::KeyedFrame,
+            df::AbstractDataFrame;
+            on=nothing,
+            kwargs...,
+        )
+            if on === nothing
+                on = intersect(keys(kf), propertynames(df))
+            end
+
+            result = $j(
+                frame(kf),
+                df;
+                on=on,
+                kwargs...,
+            )
+
+            key = intersect(keys(kf), propertynames(result))
+
+            return KeyedFrame(result, key)
+        end
+
+        # Does NOT return a KeyedFrame
+        function DataFrames.$j(
+            df::AbstractDataFrame,
+            kf::KeyedFrame;
+            on=nothing,
+            kwargs...,
+        )
+            if on === nothing
+                on = intersect(keys(kf), propertynames(df))
+            end
+
+            result = $j(
+                df,
+                frame(kf);
+                on=on,
+                kwargs...,
+            )
+
+            return result
+        end
     end
-
-    return KeyedFrame(df, key)
 end
 
-# Returns a KeyedFrame
-function Base.join(a::KeyedFrame, b::AbstractDataFrame; on=nothing, kwargs...)
-    df = join(frame(a), b; on=on === nothing ? intersect(keys(a), propertynames(b)) : on, kwargs...)
+for (T, S) in [
+    (:KeyedFrame, :KeyedFrame),
+    (:KeyedFrame, :AbstractDataFrame),
+    (:AbstractDataFrame, :KeyedFrame)
+]
+    @eval begin
+        function Base.join(df1::$T, df2::$S; on=nothing, kind=:inner, kwargs...)
+            j = if kind === :inner
+                innerjoin
+            elseif kind === :left
+                leftjoin
+            elseif kind === :right
+                rightjoin
+            elseif kind === :outer
+                outerjoin
+            elseif kind === :semi
+                semijoin
+            elseif kind === :anti
+                antijoin
+            elseif kind === :crossjoin
+                crossjoin
+            else
+                throw(ArgumentError("Unknown join kind: $kind"))
+            end
 
-    # A join can sometimes rename columns, meaning some of the key columns "disappear"
-    return KeyedFrame(df, intersect(keys(a), propertynames(df)))
-end
+            Base.depwarn("$kind joining data frames using `join` is deprecated, use `$(kind)join` instead", :join)
 
-# Does NOT return a KeyedFrame
-function Base.join(a::AbstractDataFrame, b::KeyedFrame; on=nothing, kwargs...)
-    return join(a, frame(b); on=on === nothing ? intersect(keys(b), propertynames(a)) : on, kwargs...)
+            return j(df1, df2; on=on, kwargs...)
+        end
+    end
 end
 
 ##### FIRST/LAST #####

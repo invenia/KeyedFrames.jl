@@ -401,66 +401,66 @@ using Test
 
     @testset "join" begin
         expected = KeyedFrame(DataFrame(; a=1:5, b=2:6, c=3:7, d=4:8), [:a, :b])
-        @test isequal(join(kf1, kf2), expected)
-        @test isequal(join(kf1, df2), expected)               # Join a KeyedFrame and a DF
-        @test isequal(join(df1, kf2), DataFrame(expected))    # Join a DF and a KeyedFrame
+        @test isequal(innerjoin(kf1, kf2), expected)
+        @test isequal(innerjoin(kf1, df2), expected)               # Join a KeyedFrame and a DF
+        @test isequal(innerjoin(df1, kf2), DataFrame(expected))    # Join a DF and a KeyedFrame
 
-        @test isequal(join(kf1, kf2; kind=:right), expected)
-        @test isequal(join(kf1, df2; kind=:right), expected)
-        @test isequal(join(df1, kf2; kind=:right), DataFrame(expected))
+        @test isequal(rightjoin(kf1, kf2), expected)
+        @test isequal(rightjoin(kf1, df2), expected)
+        @test isequal(rightjoin(df1, kf2), DataFrame(expected))
 
         expected = KeyedFrame(DataFrame(; a=1:5, d=4:8, b=2:6, c=3:7), [:a, :b])
-        @test isequal(join(kf2, kf1; kind=:left), expected)
+        @test isequal(leftjoin(kf2, kf1), expected)
         expected = KeyedFrame(DataFrame(; a=1:5, d=4:8, b=2:6, c=3:7), [:a])
-        @test isequal(join(kf2, df1; kind=:left), expected)
-        @test isequal(join(df2, kf1; kind=:left), DataFrame(expected))
+        @test isequal(leftjoin(kf2, df1), expected)
+        @test isequal(leftjoin(df2, kf1), DataFrame(expected))
 
         expected = KeyedFrame(
             DataFrame(; a=1:10, b=2:11, c=3:12, d=[4:8; fill(missing, 5)]), [:a, :b]
         )
-        @test isequal(join(kf1, kf2; kind=:outer), expected)
-        @test isequal(join(kf1, df2; kind=:outer), expected)
-        @test isequal(join(df1, kf2; kind=:outer), DataFrame(expected))
+        @test isequal(outerjoin(kf1, kf2), expected)
+        @test isequal(outerjoin(kf1, df2), expected)
+        @test isequal(outerjoin(df1, kf2), DataFrame(expected))
 
-        @test isequal(join(kf1, kf2; kind=:left), expected)
-        @test isequal(join(kf1, df2; kind=:left), expected)
-        @test isequal(join(df1, kf2; kind=:left), DataFrame(expected))
+        @test isequal(leftjoin(kf1, kf2), expected)
+        @test isequal(leftjoin(kf1, df2), expected)
+        @test isequal(leftjoin(df1, kf2), DataFrame(expected))
 
         expected = KeyedFrame(
             DataFrame(; a=1:10, d=[4:8; fill(missing, 5)], b=2:11, c=3:12), [:a, :b]
         )
-        @test isequal(join(kf2, kf1; kind=:right), expected)
+        @test isequal(rightjoin(kf2, kf1), expected)
         expected = KeyedFrame(
             DataFrame(; a=1:10, d=[4:8; fill(missing, 5)], b=2:11, c=3:12), :a
         )
-        @test isequal(join(kf2, df1; kind=:right), expected)
+        @test isequal(rightjoin(kf2, df1), expected)
         expected = DataFrame(; a=1:10, d=[4:8; fill(missing, 5)], b=2:11, c=3:12)
-        @test isequal(join(df2, kf1; kind=:right), expected)
+        @test isequal(rightjoin(df2, kf1), expected)
 
         expected = KeyedFrame(DataFrame(; a=1:5, b=2:6, c=3:7), [:a, :b])
-        @test isequal(join(kf1, kf2; kind=:semi), expected)
-        @test isequal(join(kf1, df2; kind=:semi), expected)
-        @test isequal(join(df1, kf2; kind=:semi), DataFrame(expected))
+        @test isequal(semijoin(kf1, kf2), expected)
+        @test isequal(semijoin(kf1, df2), expected)
+        @test isequal(semijoin(df1, kf2), DataFrame(expected))
 
         expected = KeyedFrame(DataFrame(; a=1:5, d=4:8), :a)
-        @test isequal(join(kf2, kf1; kind=:semi), expected)
-        @test isequal(join(kf2, df1; kind=:semi), expected)
-        @test isequal(join(df2, kf1; kind=:semi), DataFrame(expected))
+        @test isequal(semijoin(kf2, kf1), expected)
+        @test isequal(semijoin(kf2, df1), expected)
+        @test isequal(semijoin(df2, kf1), DataFrame(expected))
 
         expected = KeyedFrame(DataFrame(; a=6:10, b=7:11, c=8:12), [:a, :b])
-        @test isequal(join(kf1, kf2; kind=:anti), expected)
-        @test isequal(join(kf1, df2; kind=:anti), expected)
-        @test isequal(join(df1, kf2; kind=:anti), DataFrame(expected))
+        @test isequal(antijoin(kf1, kf2), expected)
+        @test isequal(antijoin(kf1, df2), expected)
+        @test isequal(antijoin(df1, kf2), DataFrame(expected))
 
         expected = KeyedFrame(DataFrame(; a=[], d=[]), :a)
-        @test isequal(join(kf2, kf1; kind=:anti), expected)
-        @test isequal(join(kf2, df1; kind=:anti), expected)
-        @test isequal(join(df2, kf1; kind=:anti), DataFrame(expected))
+        @test isequal(antijoin(kf2, kf1), expected)
+        @test isequal(antijoin(kf2, df1), expected)
+        @test isequal(antijoin(df2, kf1), DataFrame(expected))
 
         expected = KeyedFrame(
             DataFrame(; a=[1, 2, 4], d=[4, 5, 7], e=[2, 5, 2], f=[3, 2, 1]), [:a, :e]
         )
-        @test isequal(join(kf2, kf3), expected)
+        @test isequal(innerjoin(kf2, kf3), expected)
 
         expected = KeyedFrame(
             DataFrame(;
@@ -470,7 +470,7 @@ using Test
             ),
             :a,     # Key :e disappears, because it's renamed :d by the join
         )
-        @test isequal(join(kf2, kf3; on=[:a => :a, :d => :e], kind=:outer), expected)
+        @test isequal(outerjoin(kf2, kf3; on=[:a => :a, :d => :e]), expected)
     end
 
     @testset "permutecols!" begin
