@@ -21,7 +21,7 @@ struct KeyedFrame <: AbstractDataFrame
                 ArgumentError(
                     string(
                         "The columns provided for the key ($key) must all be",
-                        "present in the DataFrame ($df_names)."
+                        " present in the DataFrame ($df_names)."
                     )
                 )
             )
