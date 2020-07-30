@@ -3,9 +3,9 @@ using DataFrames
 using Test
 
 @testset "KeyedFrames" begin
-    df1 = DataFrame(; a=1:10, b=2:11, c=3:12)
-    df2 = DataFrame(; a=1:5, d=4:8)
-    df3 = DataFrame(; a=[4, 2, 1], e=[2, 5, 2], f=1:3)
+    df1 = DataFrame(:a => 1:10, :b => 2:11, :c => 3:12)
+    df2 = DataFrame(:a => 1:5, :d => 4:8)
+    df3 = DataFrame(:a => [4, 2, 1], :e => [2, 5, 2], :f => 1:3)
 
     @testset "constructor" begin
         kf1 = KeyedFrame(df1, [:a, :b])

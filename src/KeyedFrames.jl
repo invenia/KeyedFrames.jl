@@ -12,7 +12,7 @@ struct KeyedFrame <: AbstractDataFrame
     frame::DataFrame
     key::Vector{Symbol}
 
-    function KeyedFrame(df::DataFrame, key::Vector{<:Symbol})
+    function KeyedFrame(df::DataFrame, key::Vector{Symbol})
         key = unique(key)
         df_names = names(df)
 
@@ -20,7 +20,7 @@ struct KeyedFrame <: AbstractDataFrame
             throw(
                 ArgumentError(
                     string(
-                        "The columns provided for the key ($key) must all be",
+                        "The columns provided for the key ($key) must all be ",
                         "present in the DataFrame ($df_names)."
                     )
                 )
@@ -76,7 +76,7 @@ _check_consistency(kf::KeyedFrame) = _check_consistency(frame(kf))
 
 Base.:(==)(a::KeyedFrame, b::KeyedFrame) = frame(a) == frame(b) && sort(keys(a)) == sort(keys(b))
 
-Base.isequal(a::KeyedFrame, b::KeyedFrame) = isequal(frame(a), frame(b))&&isequal(keys(a), keys(b))
+Base.isequal(a::KeyedFrame, b::KeyedFrame) = isequal(frame(a), frame(b)) && isequal(keys(a), keys(b))
 Base.isequal(a::KeyedFrame, b::AbstractDataFrame) = false
 Base.isequal(a::AbstractDataFrame, b::KeyedFrame) = false
 
