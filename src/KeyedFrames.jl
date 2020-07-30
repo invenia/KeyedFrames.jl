@@ -14,7 +14,7 @@ struct KeyedFrame <: AbstractDataFrame
 
     function KeyedFrame(df::DataFrame, key::Vector{Symbol})
         key = unique(key)
-        df_names = names(df)
+        df_names = propertynames(df)
 
         if !issubset(key, df_names)
             throw(
@@ -104,7 +104,7 @@ Base.setindex!(kf::KeyedFrame, value, ind...) = setindex!(frame(kf), value, ind.
 function _kf_getindex(kf::KeyedFrame, index...)
     # If indexing by column, some keys might be removed.
     df = frame(kf)[index...]
-    return KeyedFrame(DataFrame(df), intersect(names(df), keys(kf)))
+    return KeyedFrame(DataFrame(df), intersect(propertynames(df), keys(kf)))
 end
 
 # Returns a KeyedFrame
@@ -178,14 +178,14 @@ end
 
 function DataFrames.select!(kf::KeyedFrame, inds)
     select!(frame(kf), inds)
-    new_keys = names(frame(kf))
+    new_keys = propertynames(kf)
     filter!(in(new_keys), keys(kf))
     return kf
 end
 
 function DataFrames.select(kf::KeyedFrame, inds; copycols::Bool=true)
     new_df = select(frame(kf), inds; copycols=copycols)
-    df_names = names(new_df)
+    df_names = propertynames(new_df)
     new_keys = filter(in(df_names), keys(kf))
     return KeyedFrame(new_df, new_keys)
 end
@@ -207,7 +207,7 @@ end
 
 DataFrames.rename!(kf::KeyedFrame, nms::Pair{Symbol, Symbol}...) = rename!(kf, collect(nms))
 DataFrames.rename!(kf::KeyedFrame, nms::Dict{Symbol, Symbol}) = rename!(kf, collect(pairs(nms)))
-DataFrames.rename!(f::Function, kf::KeyedFrame) = rename!(kf, [(nm => f(nm)) for nm in names(kf)])
+DataFrames.rename!(f::Function, kf::KeyedFrame) = rename!(kf, [(nm => f(nm)) for nm in propertynames(kf)])
 
 DataFrames.rename(kf::KeyedFrame, args...) = rename!(copy(kf), args...)
 DataFrames.rename(f::Function, kf::KeyedFrame) = rename!(f, copy(kf))
@@ -243,10 +243,10 @@ function Base.join(a::KeyedFrame, b::KeyedFrame; on=nothing, kind=:inner, kwargs
     )
 
     if kind in (:semi, :anti)
-        key = intersect(keys(a), names(df))
+        key = intersect(keys(a), propertynames(df))
     else
         # A join can sometimes rename columns, meaning some of the key columns "disappear"
-        key = intersect(union(keys(a), keys(b)), names(df))
+        key = intersect(union(keys(a), keys(b)), propertynames(df))
     end
 
     return KeyedFrame(df, key)
@@ -254,15 +254,15 @@ end
 
 # Returns a KeyedFrame
 function Base.join(a::KeyedFrame, b::AbstractDataFrame; on=nothing, kwargs...)
-    df = join(frame(a), b; on=on === nothing ? intersect(keys(a), names(b)) : on, kwargs...)
+    df = join(frame(a), b; on=on === nothing ? intersect(keys(a), propertynames(b)) : on, kwargs...)
 
     # A join can sometimes rename columns, meaning some of the key columns "disappear"
-    return KeyedFrame(df, intersect(keys(a), names(df)))
+    return KeyedFrame(df, intersect(keys(a), propertynames(df)))
 end
 
 # Does NOT return a KeyedFrame
 function Base.join(a::AbstractDataFrame, b::KeyedFrame; on=nothing, kwargs...)
-    return join(a, frame(b); on=on === nothing ? intersect(keys(b), names(a)) : on, kwargs...)
+    return join(a, frame(b); on=on === nothing ? intersect(keys(b), propertynames(a)) : on, kwargs...)
 end
 
 ##### FIRST/LAST #####
