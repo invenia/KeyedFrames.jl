@@ -1,7 +1,7 @@
 module KeyedFrames
 
 import Base: @deprecate
-import DataFrames: _check_consistency, deletecols!
+import DataFrames: deletecols!
 
 using DataFrames
 using DataFrames: DataFrameRow, SubDataFrame
@@ -70,7 +70,9 @@ Base.convert(::Type{DataFrame}, kf::KeyedFrame) = frame(kf)
 DataFrames.SubDataFrame(kf::KeyedFrame, args...) = SubDataFrame(frame(kf), args...)
 DataFrames.DataFrameRow(kf::KeyedFrame, args...) = DataFrameRow(frame(kf), args...)
 
-_check_consistency(kf::KeyedFrame) = _check_consistency(frame(kf))
+if isdefined(DataFrames, :_check_consistency)
+    DataFrames._check_consistency(kf::KeyedFrame) = DataFrames._check_consistency(frame(kf))
+end
 
 ##### EQUALITY #####
 
