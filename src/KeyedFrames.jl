@@ -235,6 +235,10 @@ DataFrames.nonunique(kf::KeyedFrame, cols) = nonunique(frame(kf), cols)
 
 ##### JOINING #####
 
+# Implement the various join functions provided by DataFrames.jl. If a `KeyedFrame` is used
+# in a join and no `on` keyword is provided then the keys of the `KeyedFrame` will be used
+# when joining. Additionally, a `KeyedFrame` will be returned only if the first argument to
+# the join function is of type `KeyedFrame`.
 for j in (:innerjoin, :leftjoin, :rightjoin, :outerjoin, :semijoin, :antijoin, :crossjoin)
 
     # Note: We could probably support joining more than two DataFrames but it becomes
@@ -315,6 +319,7 @@ for j in (:innerjoin, :leftjoin, :rightjoin, :outerjoin, :semijoin, :antijoin, :
     end
 end
 
+# Implement the previously defined `join` functions used with DataFrames < 0.21
 for (T, S) in [
     (:KeyedFrame, :KeyedFrame),
     (:KeyedFrame, :AbstractDataFrame),
