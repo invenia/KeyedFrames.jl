@@ -157,6 +157,12 @@ using Test
         @test isequal(cp, KeyedFrame(DataFrame(;a=[10, 2, 3, 4, 5],d=[10, 5, 6, 7, 8]), :a))
     end
 
+    @testset "setproperty!" begin
+        cp = deepcopy(kf1)
+        cp.b = 10:-1:1
+        @test isequal(cp, KeyedFrame(DataFrame(; a=1:10, b=10:-1:1, c=3:12), [:a, :b]))
+    end
+
     @testset "first/last" begin
         # Don't assume that n will always equal 6
         @test first(kf1) isa KeyedFrame
