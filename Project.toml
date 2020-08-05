@@ -1,6 +1,6 @@
 name = "KeyedFrames"
 uuid = "ddd84059-9b64-5d1b-85eb-da48df743e32"
-version = "1.2.0"
+version = "1.2.1"
 
 [deps]
 DataFrames = "a93c6f00-e57d-5684-b7b6-d8193f3e46c0"
