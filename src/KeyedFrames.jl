@@ -101,6 +101,7 @@ const ColumnIndex = Union{Real, Symbol}
 frame(kf::KeyedFrame) = getfield(kf, :frame)
 Base.keys(kf::KeyedFrame) = getfield(kf, :key)
 Base.setindex!(kf::KeyedFrame, value, ind...) = setindex!(frame(kf), value, ind...)
+Base.setproperty!(kf::KeyedFrame, field::Symbol, value) = setproperty!(frame(kf), field, value)
 
 # I don't want to have to write the same function body several times, so...
 function _kf_getindex(kf::KeyedFrame, index...)
