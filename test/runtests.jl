@@ -125,6 +125,9 @@ using Test
 
         @test isequal(kf1[:, :b], collect(2:11))
         @test isequal(kf1[:, 2], collect(2:11))
+
+        @test kf1[!, "a"] == 1:10
+        @test isequal(kf1[!, ["a", "b"]], KeyedFrame(DataFrame(; a=1:10, b=2:11), [:a, :b]))
     end
 
     @testset "setindex!" begin
